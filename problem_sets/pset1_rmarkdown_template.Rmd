@@ -40,7 +40,7 @@ To complete this problem set, you will need to download the necessary data from 
 ```{r message = FALSE}
 library(tidyverse)
 
-d1 <- read_csv("https://raw.githubusercontent.com/alexlundry/ppol6802-spring24/main/problem_sets/datasets/pset1_county_data.csv")
+d1 <- read_csv("https://raw.githubusercontent.com/alexlundry/ppol6802_spring24/main/problem_sets/datasets/pset1_county_data.csv")
 
 d2 <- read_csv("https://raw.githubusercontent.com/cphalpert/census-regions/master/us%20census%20bureau%20regions%20and%20divisions.csv")
 
