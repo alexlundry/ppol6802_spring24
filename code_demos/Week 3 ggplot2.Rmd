@@ -233,7 +233,7 @@ rb_theme <- theme(plot.title = element_text(size=30, family = "DIN", face = "bol
                    axis.text = element_text(family = "DIN", face = "bold"),
                    axis.title = element_text(size = 12, family = "DIN"))
 
-last_plot() + 
+last_plot() +
    rb_theme
 ```
 

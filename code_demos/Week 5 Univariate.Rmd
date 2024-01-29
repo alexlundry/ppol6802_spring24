@@ -21,7 +21,7 @@ library(scales)
 # a folder called "datasets" that is in my working directory
 # d1 <- read_csv("datasets/global_power_plant_database_v_1_3/global_power_plant_database.csv") 
 # if you did not, then you will have to type out the full path, something like this:
-d1 <- read_csv("~/Dropbox/Teaching/PPOL 6802/ppol6802-spring24/datasets/global_power_plant_database_v_1_3/global_power_plant_database.csv")
+d1 <- read_csv("datasets/global_power_plant_database_v_1_3/global_power_plant_database.csv")
 ```
 
 ## Dataset Overview
@@ -102,17 +102,20 @@ glimpse(d2)
 
 ## Visualizing One Categorical Variable
 
-The most basic visualization task you will undertake will be the visualization of just one variable - especially if it is a straightforward categorical variable. Imagine, for example, visualizing the gender distribution of a dataset. You'll have only a few different values to visualization!
+The most basic visualization task you will undertake will be the visualization of just one variable - especially if it is a straightforward categorical variable. Imagine, for example, visualizing the gender distribution of a dataset. You'll have only a few different values to visualize!
 
 First, let's just remind ourselves which categorical variables we have in the dataset to work with. The code below lists the names of columns in the dataframe that are of the "character" data type. We don't need to dig into this deeply, but it's helpful to know:
 
-`sapply()` is a function that applies a specific function over a vector `class()` tells us the type of variable `names()` will give us the variable names of a dataset `[]` and the brackets allows us to select specific parts of a vector
+`sapply()` is a function that applies a specific function over a vector.
+`class()` tells us the type of variable.
+`names()` will give us the variable names of a dataset.
+`[]` the brackets allows us to select specific parts of a vector.
 
 The statement below essentially says:
 
-1)  Give me the names of all the variables in s2
-2)  for each these names, check to see if the class is equal to character
-3)  if it is a character, then return the name of the variabl.e
+1)  For each of the variables in s2 (sapply)
+2)  check to see if the class is equal to character (class == "character")
+3)  if it is a character, then return the name of the variable (names(d2)[])
 
 ```{r}
 names(d2)[sapply(d2, class) == "character"]
@@ -145,7 +148,7 @@ ggplot(d2, aes(primary_fuel)) +
 
 A good start, thanks to ggplot's sensible defaults! But there are many ways we can improve this, so let's get to it. First, and most obviously, let's give these bars a meaningful sort, preferably in order of the number of instances in the data.
 
-How do we do this? Well, we could "bake an apple pie from scratch" OR we could use an easily accesible function, in this case, a tidyverse called `fct_infreq()` which automatically turns categorical variables into a factor (a special data type in R), that is put in descending order based on its frequency in the dataset.
+How do we do this? Well, we could "bake an apple pie from scratch" OR we could use an easily accessible function, in this case, a tidyverse function called `fct_infreq()` which automatically turns categorical variables into a factor (a special data type in R), that is put in descending order based on its frequency in the dataset.
 
 ```{r}
 ggplot(d2, aes(x = fct_infreq(primary_fuel))) +
@@ -212,7 +215,7 @@ p1 %>%
   coord_flip()
 ```
 
-Love it. But let's change the colors up - the pink and blue aren't really helping us convey any useful information. We can change them by adding a `scale` adjustment for the fill aesthetic. We'll designate the colors manually instead of relying on a built-in color palette, and we'll choose green and black to represent fossil fuels versus non-fossil fuels.
+Love it. But let's change the colors up - the pink and blue aren't really helping us convey any useful information. We can change them by adding a `scale` adjustment for the fill aesthetic. We'll designate the colors manually instead of relying on a built-in color palette, and we'll choose black and green to represent fossil fuels versus non-fossil fuels .
 
 ```{r}
 p1 %>% 
@@ -280,7 +283,7 @@ p1 %>%
 These need some cleaning up. I see two ways to clean these up:
 
 1)  **Add commas where appropriate to the X axis labels and to the bar labels.** We do this by adding a call to the scale function inside of geom_text and for the continuous y axis. We call a function from the `scales` package that makes it easier to label things appropriately. When we want to reformat a vector of numbers like in our geom_text call, we use the `comma()` function (or `percent()` if you want to format it as a percentage). But when we want to format an axis, we have to use a slightly different function called `label_comma()` (or `label_percent()`).
-2)  **Reposition the bar labels so they don't overlap the ends of the bars.** To do this, you should rely on the `hjust` parameter in your `geom_text` call - it stands for horizontal adjustment and a value of 1 will put it at the right most edge of the bar, a value of 0.1 will put it just to the right of the bar. Why? Honestly, I've never gotten a good answer on this. My hjust's always need trial and error to get them where I want them to be.\
+2)  **Reposition the bar labels so they don't overlap the ends of the bars.** To do this, you should rely on the `hjust` parameter in your `geom_text` call - it stands for horizontal adjustment and a value of 1 will put it at the right most edge of the bar, a value of 0.1 will put it just to the right of the bar. Why? Honestly, I've never gotten a good answer on this. My hjust's always need trial and error to get them where I want them to be.
 3)  **Reposition the bar labels so that they vary based on the length of the bars.**. Because the height of the bars varies so dramatically, we need to vary where they labels go. I'm going to do this with some trickery in the form of `ifelse()` statements and multiple `geom_text` calls. For bars that are greater than 1000, I'm having it do `hjust = 1`, and if below 1000, the `hjust = 0.1`
 
 ```{r}
@@ -302,8 +305,6 @@ That's a good looking bar chart!
 
 Finally, now that we've got a really good bar chart, let's assume that we've been asked to show this data not as raw counts but as a percentages of all US power plants. We'll precalculate this number outside of ggplot by adding an `n()` function call to our count statement.
 
-Then in ggplot, we simply change the assignment of the y variable in our initial call, and also the aesthetic mapping in our `geom_text`. We'll also need to change our number formatting to percentages.
-
 ```{r}
 p2 <- d2 %>% 
   mutate(primary_fuel = fct_infreq(primary_fuel) %>% fct_rev(),
@@ -311,6 +312,12 @@ p2 <- d2 %>%
   count(fossil_fuel, primary_fuel, total = n()) %>% 
   mutate(pct = round(n / total, 2))
 
+p2
+```
+
+Then in ggplot, we simply change the assignment of the y variable in our initial call, and also the aesthetic mapping in our `geom_text`. We'll also need to change our number formatting to percentages.
+
+```{r}
 p2 %>% 
   ggplot(aes(primary_fuel, pct, fill = fossil_fuel)) +
   geom_bar(stat = "identity") +
@@ -345,7 +352,7 @@ pie1 <- d2 %>%
 pie1
 ```
 
-No suprises here. But now, let's simply take that bar chart and convert the coordinates to polar using `coord_polar`. I've also added a `theme_void` call because without it the default gives you some weird lines and shading (try it with that removed if you don't believe me).
+No surprises here. But now, let's simply take that bar chart and convert the coordinates to polar using `coord_polar`. I've also added a `theme_void` call because without it the default gives you some weird lines and shading (try it with that removed if you don't believe me).
 
 ```{r}
 pie2 <- pie1 +
@@ -435,7 +442,7 @@ d2 %>%
   mutate(primary_fuel = fct_infreq(primary_fuel) %>% fct_rev(),
          fossil_fuel = ifelse(primary_fuel %in% c("Coal", "Oil", "Petcoke"), TRUE, FALSE)) %>% 
   count(fossil_fuel, primary_fuel, total = n()) %>% 
-  mutate(pct = round(100 *(n / total))) %>% 
+  mutate(pct = round(100 *(n / total), 1)) %>% 
   ggplot(aes(fill = primary_fuel, area = pct)) +
   geom_treemap() + 
   geom_treemap_text(aes(label = str_c(primary_fuel, " ", pct, "%")), color = "white", 
@@ -465,7 +472,7 @@ ggplot(d2, aes(capacity_mw)) +
    geom_histogram()
 ```
 
-The tallest bar shows that roughly 8000 observations are clustered around the lowest possible MW capacity. Moreover, the histogram shows that there is not a ton of variability here. High kurtosis (mode is more common than it would be in a normal distribution). This is likely a function of how many different types of power plants there are in the dataset, covering everything from very tiny solar arrays to massive nuclear stations. Let's get something more useful by filtering to a specific type of fuel:
+The tallest bar shows that roughly 8000 observations are clustered around the lowest possible MW capacity. This is likely a function of how many different types of power plants there are in the dataset, covering everything from very tiny solar arrays to massive nuclear stations. Let's get something more useful by filtering to a specific type of fuel:
 
 ```{r}
 d2 %>% 
@@ -500,7 +507,7 @@ d2 %>%
 
 ### Boxplots
 
-Looking for something nerdier? Something a little more information dense? Boxplots are odd, but can be incredibly useful (invented by Tukey, btw). Here's a great description of how they work. The box itself represents the interquartile range, running from the 25th %tile to the 75th %tile, with the bar in the middle representing the median. The whiskers extend out to the farthest non-outlier point. And outliers are shown as dots.
+Looking for something nerdier? Something a little more information dense? Boxplots are odd, but can be incredibly useful (invented by Tukey, remember). Here's a great description of how they work. The box itself represents the interquartile range, running from the 25th %tile to the 75th %tile, with the bar in the middle representing the median. The whiskers extend out to the farthest non-outlier point. And outliers are shown as dots.
 
 ![](https://d33wubrfki0l68.cloudfront.net/153b9af53b33918353fda9b691ded68cd7f62f51/5b616/images/eda-boxplot.png)
 
@@ -518,7 +525,7 @@ Boxplots are rarely used when communicating results to those with no statistical
 
 ### Dotplots
 
-Finally, dotplots are sort of the hybrid between a waffle chart and a histogram, in which each dot has spot on the X axis designated by numeric data, and the dots are stacked, with each dot representing one observation.
+Finally, dotplots are sort of the hybrid between a waffle chart and a histogram, in which each dot has spot on the X axis designated by numeric data, and the dots are stacked, with each dot representing one observation.  Think of 538's Senate prediction [plots]<https://projects.fivethirtyeight.com/2022-election-forecast/senate/>
 
 They can be used to great effect when you have a limited number of observations for a numeric variable. Consider the example below, in which we take the full global dataset and count the number of nuclear power plants that each country has. We then display a dotplot of the number of countries that are at each count of nuclear plants (1, 2, 3, etc).
 
