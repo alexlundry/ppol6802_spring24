@@ -1,7 +1,7 @@
 PPOL 6802 Week 5 - Univariate Visualization
 ================
 Alex Lundry
-2024-01-29
+2024-02-06
 
 Today we’ll be learning how to create visualizations in R and ggplot2 of
 univariate data. For this demonstration we will be using the [Global
@@ -85,9 +85,9 @@ of visualization to EDA:
 > “Getting information from a table is like extracting sunbeams from a
 > cucumber.” ~ Arthur & Henry Farquhar
 
-We’ll begin with three basic commands that don’t quite qualify formally
-as data visualization, but they certainly enable you to see the data
-more easily:
+We’ll begin with three basic commands that don’t qualify formally as
+data visualization, but they certainly enable you to see the data more
+easily:
 
 - the tidyverse’s `glimpse` function.
 - base R’s `head` function
@@ -278,7 +278,7 @@ specific parts of a vector.
 
 The statement below essentially says:
 
-1)  For each of the variables in s2 (sapply)
+1)  For each of the variables in d2 (sapply)
 2)  check to see if the class is equal to character (class ==
     “character”)
 3)  if it is a character, then return the name of the variable
@@ -352,10 +352,13 @@ ggplot(d2, aes(primary_fuel)) +
 
 ![](Week-5-Univariate_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-A good start, thanks to ggplot’s sensible defaults! But there are many
-ways we can improve this, so let’s get to it. First, and most obviously,
-let’s give these bars a meaningful sort, preferably in order of the
-number of instances in the data.
+A good start, thanks to ggplot’s sensible defaults! Most importantly,
+with geom_bar it is defaulting the **stat** call to “count” and simply
+counting up the number of items for each primary_fuel category.
+
+But there are many ways we can improve this, so let’s get to it. First,
+and most obviously, let’s give these bars a meaningful sort, preferably
+in order of the number of instances in the data.
 
 How do we do this? Well, we could “bake an apple pie from scratch” OR we
 could use an easily accessible function, in this case, a tidyverse
@@ -409,9 +412,9 @@ ggplot. Like so:
 Fine, but this then means we need to make two key changes to our ggplot
 syntax:
 
-1)  We change the aesthetic call. Now we have both an X mapping to
-    `primary_fuel` and a Y mapping to new variable created by the count
-    function, `n`.
+1)  We change the aesthetic call. Originally we only needed an X
+    aesthetic. Now we need have both an X mapping to `primary_fuel` and
+    a Y mapping to new variable created by the count function, `n`.
 2)  We must change the geom_bar function. Its default stat is `count`,
     but now we have already done the counting outside of ggplot, so we
     must tell it to use a different stat. When we do NOT want it to
@@ -616,7 +619,7 @@ That’s a good looking bar chart!
 
 Finally, now that we’ve got a really good bar chart, let’s assume that
 we’ve been asked to show this data not as raw counts but as a
-percentages of all US power plants. We’ll precalculate this number
+percentages of all US power plants. We’ll pre-calculate this number
 outside of ggplot by adding an `n()` function call to our count
 statement.
 
