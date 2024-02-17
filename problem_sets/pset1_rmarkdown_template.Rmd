@@ -98,9 +98,6 @@ What do you send your boss? (note: don't overthink or overdo this...I just want 
 
 **BUTTERUP YOUR BOSS BONUS (not required):** Go beyond what we discussed in the lecture and make this plot amazing. Potential additions: a title (+0.5 points), better labels (+0.5 points), adding color (+1 point), adding another variable using something other than color (+2 points).
 
-![](~/Dropbox/Teaching/PPOL 6802/ppol6802-spring24/problem_sets/ggplot_mcmahon_meme.jpg)
-
-
 ```{r}
 # insert and run your ggplot code for question 4 here
 ```
