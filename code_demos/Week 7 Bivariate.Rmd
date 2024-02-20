@@ -8,7 +8,7 @@ output: github_document
 ## Intro and Setup
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, tidy = TRUE)
 ```
 
 Today we'll be learning how to create visualizations in R and ggplot2 of bivariate data. For this demonstration we will be using the [Gapminder](https://www.gapminder.org/) dataset. If you have not already done so, please run `install.packages("gapminder")` so that you have the access to the data on your computer and your R environment.
@@ -31,13 +31,25 @@ Looks like each row is an observation of a specific country in a particular year
 
 ## Categorical & Numeric Variables
 
-We'll begin first with visualizing a categorical and numeric variable together.  We begin with this one because 1) in many ways it is the simplest of our interactions, and 2) we've kind of already done these.  In fact, the construction of these visualizations will be minimally different from how we built them for univariate analysis, BECAUSE we ended up doing our "counting" for most of our univariate visualizations outside of ggplot.  You'll see what I mean shortly... 
+We'll begin first with visualizing a categorical and numeric variable together.  We begin with this one because 1) in many ways it is the simplest of our interactions, and 2) we've kind of already done these.  In fact, the construction of these visualizations will be minimally different from how we built them for most of our univariate analysis, BECAUSE we ended up doing our "counting" for most of our univariate visualizations outside of ggplot.  You'll see what I mean shortly... 
 
 Before we begin, let's get our data ready. For this demonstration, our task is the following:
 
 -   *Show me the populations of the 10 most populous countries in the world in 2007.*
 
-We use our tidyverse syntax to take the gapminder data, filter it to the year 2007, sort it descending by population and then take the first 10 rows.
+Take a minute, and try to write code to do that without looking ahead...
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+We use our tidyverse syntax to take the gapminder data, pipe it into a filter for the year 2007, sort it descending by population and then take the first 10 rows.
 
 ```{r}
 d1 <- gapminder %>%
@@ -52,7 +64,13 @@ d1
 
 Now let's get that data into a simple bar. 
 
-Remember your ggplot syntax! Ggplot takes as parameters a dataset, and then you must map it's aesthetic components. The dataset will be `d1` and then the aesthetics are what you are encoding the data as. So, in this one, we are encoding country as the X aesthetic (I haven't explicitly declared it here - remember that ggplot is really good at understanding what aesthetics you mean). And we want a bar chart so we need a `geom_bar` call.  
+Remember your ggplot syntax! At a minimum, we need three things...WHAT three things?
+
+- data
+- aesthetic(s)
+- geom
+
+The dataset will be `d1` and then the aesthetics are what you are encoding the data as. So, in this one, we are encoding country as the X aesthetic (I haven't explicitly declared it here - remember that ggplot is really good at understanding what aesthetics you mean). And we want a bar chart so we need a `geom_bar` call.  
 
 Now, you may think that's all you need, but that's a mistake, because look at what happens:
 
@@ -61,7 +79,9 @@ ggplot(d1, aes(country)) +
   geom_bar()
 ```
 
-That isn't right!!!  Remember that we aren't visualizing just one variable.  We are actually showing how another variable (population) varies by country.  The visualization above only mapped one of those variables.  It took that variable - `country` - and then saw that we were using `geom_bar` and applied the default stat (count) to the data.  So it simply counted, how many times do I see "United States"?  Well I see it once.  How many times do I see Bangladesh?  Once. But remember from Week 5 that's not what we need.  We already have the number we want to visualize, so the "stat" we assign to it is called "identity."  And we need to make assignments for both the X and the Y axis:
+That isn't right!!!  Remember that we aren't visualizing just one variable.  We are actually showing how another variable (population) varies by country.  The visualization above only mapped one of those variables.  It took that variable - `country` - and then saw that we were using `geom_bar` and applied the default stat (count) to the data.  So it simply counted, how many times do I see "United States"?  Well I see it once.  How many times do I see Bangladesh?  Once. 
+
+But remember from Week 5 that's not what we need.  We already have the number we want to visualize, so the "stat" we assign to it is called "identity."  And when we do this, it means we need to make assignments for both the X *and* the Y axis:
 
 ```{r}
 ggplot(d1, aes(country, pop)) +
@@ -71,7 +91,6 @@ ggplot(d1, aes(country, pop)) +
 
 Ok, that's a good start, but remember all the good stuff we learned in week 5?  Here's what I want you to do:
 
-- reorder the bars from the most populous to the least populous
 - make this a horizontal bar plot
 - create a new variable called `billions` and if the country has a population of one billion or more it will be true.
 - color any countries that have one billion or more in population differently than other countries.
@@ -83,12 +102,11 @@ Here's what it should look like:
 
 ```{r echo=FALSE}
 d1 %>% 
-  mutate(billions = ifelse(pop > 1000000000, T, F)) %>%
-  ggplot(aes(reorder(country, pop), pop)) +
-  geom_bar(aes(fill = billions), stat = "identity") +
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  ggplot(aes(country, pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
   geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
   scale_fill_manual(values = c("black", "red")) +
-  theme(legend.position = "none") +
   labs(title = "Top 10 Most Populous Countries, 2007",
        x = "",
        y  = "2007 Population") +
@@ -96,9 +114,59 @@ d1 %>%
   coord_flip()
 ```
 
-There was something you've never seen before in there: `reorder()`.  This is SOMEWHAT like `fct_infreq()` in that it changes the ordering of a variable.  But `fct_infreq` relies upon counting up individual observations in a dataset.  But that's already been done here, so it won't work!  Instead, you would use reorder when you already have the data modified the way you want it and you simply need to sort.  And no, using `arrange()` won't work here because it does not change the underlying ordering of the variable's values; it is only a temporary "cosmetic" change.  Instead `reorder()` provides a change to the underlying order that translates over to the chart.  
+There is one big problem with this - it is not ordered.  Let's say we did want to sort it, you'd probably be tempted to us `fct_infreq()`, but let's see what happens:
+
+```{r}
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  ggplot(aes(fct_infreq(country), pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
+```
+
+It didn't work!  Why not?  `fct_infreq` relies upon counting up individual observations in a dataset.  Because our data has already been counted, there is only 1 of each country, so there is nothing to put in order.  
+
+We need to do something else.  We need to `reorder()`, which is a VERY helpful function when you are dealing with data that has already been counted like this. You would use reorder when you already have the data modified the way you want it and you simply need to sort.  And no, using `arrange()` won't work here because it does not change the underlying ordering of the variable's values; it is only a temporary "cosmetic" change:  
+
+```{r}
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  arrange(desc(pop)) %>% 
+  ggplot(aes(country, pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
+```
+
+Instead `reorder()` provides a change to the underlying order that translates over to the chart.  
 
 When using `reorder()` think of the syntax this way:  `reorder(country, pop)` can be translated to "reorder the variable country based on the value of the variable pop."  And if you want to sort in the opposite order, simply put a negative sign in front of the variable `reorder(country, -pop)`
+
+```{r}
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  arrange(desc(pop)) %>% 
+  ggplot(aes(reorder(country, pop), pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
+```
 
 ### Cleveland Dot Plots
 
@@ -138,7 +206,7 @@ We could also - with just a few modifications, turn this into an alternative to 
 
 The first step to doing this is to add a line segment connecting each point to the y axis:
 
-- `geom_segment` adds a line to the plot.  We have to give it a number of aesthetic mappings to work: where it should start and end on the X axis, and where it should go on the Y.  You'll notice that y and yend are identical.  It needs both to function properly.  
+- `geom_segment` adds a line to the plot.  We have to give it a number of aesthetic mappings to work: where it should start and end on the X axis, and where it should go on the Y.  You'll notice that `y` and `yend` are identical.  It needs both to function properly.  
 
 ```{r}
 gapminder %>%
@@ -157,7 +225,7 @@ gapminder %>%
         subtitle = "Gapminder data for Asia - 2007")
 ```
 
-This only gets us halfway there though.  You can see that we are suffering from some figure/ground issues here where the line segment gets mixed up with the background color and the gridlines lines.  We can continue to clean this up by removing unnecessary elements, like the grey background panel and horizontal gridlines:
+This only gets us halfway there though.  You can see that we are suffering from some figure/ground issues here where the line segment gets mixed up with the background color and the gridlines.  We can continue to clean this up by removing unnecessary elements, like the grey background panel and horizontal gridlines:
 
 - `theme` allows us to first give it a specific minimal theme, and then we add two more specific customizations in which we tell it to remove the major and minor gridlines in the panel.  
 
@@ -176,17 +244,18 @@ gapminder %>%
         y = "",
         title = "Life Expectancy by Country",
         subtitle = "Gapminder data for Asia - 2007") +
-  theme_minimal() 
+  theme_minimal() +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 ```
-
 
 This is much breezier than our original bar chart!
 
 ### Conditional Box Plots
 
-Remember how to make boxplots?  All you need to do in order to make them conditional on a categorical variable is to assign that categorical variable as the X aesthetic (assuming the numeric one is assigned as the Y).
+Remember how to make boxplots?  All you need to do in order to make them conditional on a categorical variable is to assign that categorical variable as the X aesthetic (assuming the numeric one is assigned as the Y).  
+
+Here we look at the distribution of the GDP per capita of countries within a particular region for the year 2007. 
 
 ```{r}
 gapminder %>% 
@@ -212,8 +281,7 @@ Let's improve this some more:
 
 - Flipping this might also help (We could also have simply reversed the X and Y declarations, but this is easier (imho)).  
 - Let's color by continent.  Yes, we already have it as one of the axis mappings, but it can't hurt to have it doubly encoded here.  To do this, we add an aesthetic call within `geom_boxplot` telling it to map the fill attribute to the country value.
-- But let's remove any legend that it creates - that is too much redundancy. We do this by calling `theme` and specifiying that legend position should be "none." 
-- And let's add some labeling to the plot: title, subtitle, X and Y axis labels.
+- But let's remove any legend that it creates - that is too much redundancy. We do this by calling `theme` and specifiying that legend position should be "none." - And let's add some labeling to the plot: title, subtitle, X and Y axis labels.
 - Finally, I'd like to pretty up that axis labeling by calling the appropriate scales function.  To do this, we must add a call to change the Y axis scale, so we use `scale_y_continuous` and we tell it to adjust the labels, using a function from the `scales` package called `label_dollar`.  If you recall from our previous lesson, we use the `label_` functions when we are changing scale labels.  
 
 ```{r}
@@ -229,18 +297,26 @@ gapminder %>%
   coord_flip() +
   theme(legend.position = "none")
 ```
-This looks great!
+This looks great!  Notice that we remove the legend using a call to `theme` and designate the parameter `legend.position` to "none".
 
 ### Grouped Kernel Density Plots
 
 As you may recall from week 5, the kernel density plot is basically just a smoothed histogram. When we want to display the distribution of a numeric variable for a number of categorical variables, showing histograms can get a bit chaotic and overwhelming.  In these instances the density plots can be more useful.  
 
-As before with the boxplots, all we need to do is change the geom and add a new aesthetic call.  In this case, mapping `fill` to our categorical variable.  The one additional item here is a fixed designation in `geom_density` that sets the alpha - or transparency - to 0.4.  The alpha can range from 0 (completely transparent) to 1 (completely opaque).  We want it to be somewhat transparent because we are overlapping them all on the same axis.  This allows for direct comparison.  
+As before with the boxplots, all we need to do is change the geom and add a new aesthetic call mapping `fill` to our categorical variable:
+
+```{r}
+ggplot(gapminder, aes(x = gdpPercap, fill = continent)) +
+   geom_density()
+```
+
+Ok, but that's not great because they are overlapping each other.  Fortunately there is something we can change here: a fixed designation in `geom_density` that sets the alpha - or transparency - to 0.4.  The alpha can range from 0 (completely transparent) to 1 (completely opaque).  We want it to be somewhat transparent because we are overlapping them all on the same axis.  This allows for a more direct comparison.  
 
 ```{r}
 ggplot(gapminder, aes(x = gdpPercap, fill = continent)) +
    geom_density(alpha = 0.4)
 ```
+
 The graph makes clear that, in general, there are a large number of countries with low GDP on the African continent.  Of course, we can clean this up in a number of ways, labels, coloring, legend, scale formatting, but you should get the picture by now.  Instead, let's visualize this same data using a SLIGHTLY different visualization.
 
 ### Joyplots / Ridgelines
@@ -267,7 +343,7 @@ Let's shift now to visualizing two categorical variables.  In these instances we
 
 In making bar charts of two categorical variables, we will be relying on ggplot's notion of "position."  
 
-For these visualizations, we'll be looking at the top 5 countries by population in each continent in 2007, so let's get our data ready.  We filter to our desired year, then group by continent, sort, and then slice top 5 countries in each continent (though the `slice()` function specifies the top 5, it inherits the grouping from the `group_by` so it gives the top 5 within each group):
+For these visualizations, we'll be looking at the top 5 countries by population in each continent in 2007, so let's get our data ready.  We filter to our desired year, then group by continent, sort, and then slice the top 5 countries in each continent (though the `slice()` function specifies the top 5, it inherits the grouping from the `group_by` so it gives the top 5 within each group):
 
 ```{r}
 g1 <- gapminder %>% 
@@ -300,7 +376,7 @@ This default behavior, when it has multiple rows to display, is `position = "sta
 
 ### Grouped Bar Chart
 
-But this may not be exactly the right way to visualize this data, especially if we want some comparison of how individual countries within a continent compare to one another.  In this case, we can use `position = "dodge"` to turn this into a grouped bar chart. Everything else in the syntax is the same, except for our override of the default position in the geom_bar call.  Again, not a great chart, but this should serve for position demonstration purposes.
+But this may not be exactly the right way to visualize this data, especially if we want some comparison of how individual countries within a continent compare to one another.  In this case, we can use `position = "dodge"` to turn this into a grouped bar chart. Everything else in the syntax is the same, except for our override of the default position in the geom_bar call.  Again, not a great chart, but this should serve for demonstration purposes when it comes to "position."
 
 ```{r}
 g1 %>% 
@@ -380,7 +456,7 @@ ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
 
 Remember that because we put fill in the original ggplot call it is inherited by the `geom_smooth` call!  If we had not put it there, then we would have only one smoothed line. 
 
-You could even add another variable to the same plot by adding an aesthic mapping to something like size or alpha.
+You could even add another variable to the same plot by adding an aesthetic mapping to something like size:
 
 ```{r}
 ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
@@ -407,11 +483,11 @@ ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
    geom_smooth()
 ```
 
-The overall point here is that once you know ggplot well enough it becomes quite easy to start adding variables to a plot.  However, you need to keep in mind our lessons about pre-attentive processing and how easily different encodings are discerible by viewers!  
+These aren't fantastic charts, but they are a great starting point.  Instead, the overall point here is that once you know ggplot well enough it becomes quite easy to start adding variables to a plot.  However, you need to keep in mind our lessons about pre-attentive processing and how easily different encodings are discernible by viewers!  
 
 ### Faceting
 
-Now we arrive at an extremely powerful visual analytical tool when working with many variables: faceting.  We saw a hint of it's power when we looked ar ridgeline plots (joy plots) earlier.  
+Now we arrive at an extremely powerful visual analytical tool when working with many variables: faceting.  We saw a hint of it's power when we looked at ridgeline plots (joy plots) earlier.  
 
 Faceting breaks a plot into subsets and display small multiples conditional on another variable.
 
@@ -435,6 +511,8 @@ ggplot(gapminder,
    facet_wrap(~ continent)
 ```
 
+Look at how elegant and useful that is!!  Faceting (aka small multiples) is EXTREMELY useful and generally very easy for audiences to understand.
+
 One thing you can do to make the facets (potentially) more interesting is to let the x and/or y axes vary within each plot.  You do that by passing it a `scales` argument of one of the following:
 
 * scales = "fixed": x and y scales are identical (fixed) across all panels
@@ -455,9 +533,15 @@ ggplot(gapminder,
 
 Notice the difference for Oceania in particular!
 
-This method wraps the facets.  But you can force all of your items into either a row or column by using `facet_grid` with a specific type of variable call.  
+The `facet_wrap` call (predictably) wraps the facets.  But you can force all of your items into either a row or column by using `facet_grid` with a specific type of variable call.  
 
-The `facet_grid` statement is written as a formula (that's what the ~ means in R); it's format is Row ~ Column, so the first variable you give it will be used as the rows of your facet and the second will be the columns.  If you want one variable to display just in a single row you would write it as `facet_grid(. ~ VAR)` because your variable of interest would be displayed in separate columns along a single row.  If you wanted them all in a single column it would be `facet_grid(VAR ~ .)` because the variable values would be displayed in separate rows, forcing the display into a single column.   Take a look at it in action:
+The `facet_grid` statement is written as a formula (that's what the ~ means in R); it's format is `Row ~ Column`, so the first variable you give it will be used as the rows of your facet and the second will be the columns.  
+
+If you want one variable to display just in a single row you would write it as `facet_grid(. ~ VAR)` because your variable of interest would be displayed in separate columns along a single row.  
+
+If you wanted them all in a single column it would be `facet_grid(VAR ~ .)` because the variable values would be displayed in separate rows, forcing the display into a single column.   
+
+Take a look at it in action. Here they are in a single row:
 
 ```{r}
 ggplot(gapminder, 
@@ -467,6 +551,8 @@ ggplot(gapminder,
    scale_x_log10() +
    facet_grid(. ~ continent, scales = "free") # display in single row
 ```
+
+And here they are in a single column:
 
 ```{r}
 ggplot(gapminder, 
@@ -502,15 +588,15 @@ Look at all that data!
 It doesn't have to be a scatterplot that gets faceted.  Check it out here where we use it on the density plot we created earlier.  
 
 ```{r}
-ggplot(gapminder, aes(x = gdpPercap, fill = continent)) +
+ggplot(d2, aes(x = gdpPercap, fill = continent)) +
    geom_density(alpha = 0.4) +
-  facet_wrap(~ continent, scales = "free") +
+  facet_grid(continent ~ cool, scales = "free") +
   theme(legend.position = "none")
 ```
 
 ## Time Dependent Graphs
 
-Another very common type of multivariate plot is the visualization of time against other key variables, allowing us to see how  measures ebb and flow over the years, months, days, minutes and seconds.  Here we'll look at a few different ways of visualizing time, many of which are simply variations of other charts we've already seen. 
+Another very common type of multivariate plot is the visualization of time against other key variables, allowing us to see how measures ebb and flow over the years, months, days, minutes and seconds.  Here we'll look at a few different ways of visualizing time, many of which are simply variations of other charts we've already seen. 
 
 ### Time Series
 
@@ -523,7 +609,9 @@ gapminder %>%
   geom_line() 
 ```
 
-Easy enough, but it is hard to read individual values in the graph above. When there are so few individual values, you may want to make some visual adjustments to make them easier to identify.  To do so, we'll add points to the chart with an additional layer that calls `geom_point`.  It will inherit the key aesthetics from the initial call, but we'll give it some fixed attributes on size and color.  And we'll make some similar adjustments within `geom_line`.  Finally we'll add some labeling to the plot and to the points.  For the latter, we add a `geom_text` layer, giving it a `label` aesthetic mapping, doing some rounding to the number and then setting the label to the right of the point with an `hjust`. 
+Easy enough, but it is hard to read individual values in the graph above. When there are so few individual values, you may want to make some visual adjustments to make them easier to identify.  
+
+To do so, we'll add points to the chart with an additional layer that calls `geom_point`.  It will inherit the key aesthetics from the initial call, but we'll give it some fixed attributes on size and color.  And we'll make some similar adjustments within `geom_line`.  Finally we'll add some labeling to the plot and to the points.  For the latter, we add a `geom_text` layer, giving it a `label` aesthetic mapping, doing some rounding to the number and then setting the label to the right of the point with an `hjust`. 
 
 ```{r}
 gapminder %>% 
@@ -572,7 +660,17 @@ This can just as easily be turned into an area chart, by changing to a `geom_are
 
 ```{r}
 ggplot(economics, aes(date, psavert)) +
-  geom_area(fill="lightblue", color="black") +
+  geom_area() +
+  labs(title = "Personal Savings Rate",
+       x = "Date",
+       y = "Personal Savings Rate")
+```
+
+If we wanted to get a little fancy, we can change the fixed values of the area's fill and line color:
+
+```{r}
+ggplot(economics, aes(date, psavert)) +
+  geom_area(fill="lightblue", color="yellow") +
   labs(title = "Personal Savings Rate",
        x = "Date",
        y = "Personal Savings Rate")
@@ -580,7 +678,7 @@ ggplot(economics, aes(date, psavert)) +
 
 Finally, there will be times when you'll need to display multiple time series on the same chart.  A good example of this is when you are comparing stock prices.  Let's compare closing prices for Apple and Netflix from 2013 through today. The `tq_get` function in the `tidyquant` package is used to obtain the stock data from Yahoo Finance.  (You'll have to install `tidyquant` first).  
 
-The key thing here when displaying multiple time series is to 1) make sure the data is TALL and not WIDE, and 2) to map the color aesthetic to the categorical variable that differentiates between the multiple series, in this case `symbol`.  Take a look at the data so you understand this:
+The key thing here when displaying multiple time series is to 1) **make sure the data is TALL and not WIDE**, and 2) to map the color aesthetic to the categorical variable that differentiates between the multiple series, in this case `symbol`.  Take a look at the data so you understand this:
 
 ```{r}
 # install.packages("tidyquant")
@@ -591,7 +689,7 @@ stocks <- tq_get(c("AAPL", "NFLX"), get = "stock.prices")
 stocks
 ```
 
-It is much easier to put multiple lines on a plot when the data is long and you have a variable that can easily be used to distinguish the lines (in this case `symbol`).  I'll show you in a moment why it's tricker with "wide" data.
+It is much easier to put multiple lines on a plot when the data is long and you have a variable that can easily be used to distinguish the lines (in this case `symbol`).  I'll show you in a moment why it's trickier with "wide" data.
 
 But before that, let's look at our viz.  You'll notice that I also added some modifications to the axes through `scale_x_date` and `scale_y_continuous`, as well as labeling, a minimal theme and setting the colors using a pre-built palette.  
 
@@ -599,17 +697,18 @@ But before that, let's look at our viz.  You'll notice that I also added some mo
 ggplot(stocks, aes(date, close, color=symbol)) + 
   geom_line(size=1) +
   scale_x_date(date_breaks = '1 year', 
-               labels = label_date("%y")) +
+               labels = label_date("%Y")) +
   scale_y_continuous(labels = label_dollar()) +
   labs(title = "NASDAQ Closing Prices",
        subtitle = "2013 - 2023",
        caption = "source: Yahoo Finance",
+       x = "Year",
        y = "Closing Price") +
   theme_minimal() +
   scale_color_brewer(palette = "Dark2")
 ```
 
-Now, let's consider what we would have to do if this data were "wide."  To show you that, I'll change the data using a handy tidyverse function called `pivot_wider`.  There's also a corresponding `pivot_longer`.  I won't go into the details of how to use, but take a look at how it changes the data:  
+Now, let's consider what we would have to do if this data were "wide."  To show you that, I'll change the data using a handy tidyverse function called `pivot_wider`.  There's also a corresponding `pivot_longer`.  I won't go into the details of how to use these, but you should play around with it, as it can be extremely useful.  But for now, take a look at how it changes the data:
 
 ```{r}
 wide_stocks <- stocks %>% 
@@ -626,26 +725,25 @@ ggplot(wide_stocks, aes(x = date)) +
   geom_line(aes(y = AAPL), size=1, color = "black") +
   geom_line(aes(y = NFLX), size = 1, color = "red") +
   scale_x_date(date_breaks = '1 year', 
-               labels = label_date("%y")) +
+               labels = label_date("%Y")) +
   scale_y_continuous(labels = label_dollar()) +
   labs(title = "NASDAQ Closing Prices",
        subtitle = "2013 - 2023",
        caption = "source: Yahoo Finance",
+       x = "Year",
        y = "Closing Price") +
-  theme_minimal() +
-  scale_color_brewer(palette = "Dark2")
+  theme_minimal() 
 ```
 
 ### Dumbbell charts
 
 Dumbbell charts are useful for displaying change between two (AND ONLY TWO!) time points for several groups or observations. You end up with a visualization that looks like a dumbbell with two points representing the values at two different times, connected by a line segment.  The `geom_dumbbell` function comes from the `ggalt` package.  
 
-Using the gapminder dataset let’s plot the change in life expectancy from 1952 to 2007 in the Americas. Unlike what we just talked about above, and somewhat frustratingly, to visualize the `geom_dumbbell` you need the data to be in a WIDE format, instead of the tall format it is currently in.  So let's use that `pivot_wider` function yet again!  Here we are telling it to turn the data into a wider table and to use the `years` variable to make new columns with a specific prefix, and populate those new columns with the values from the `lifeExp` variable.  And notice that we have to select down the dataset variables to only those that are absolutely necessary for the pivoted data.
+Using the gapminder dataset let’s plot the change in life expectancy from 1952 to 2007 in the Americas. Unlike what we just talked about above, and somewhat frustratingly, to visualize the `geom_dumbbell` you need the data to be in a WIDE format, instead of the tall format it is currently in.  
+
+So let's use that `pivot_wider` function yet again!  Here we are telling it to turn the data into a wider table and to use the `years` variable to make new columns with a specific prefix, and populate those new columns with the values from the `lifeExp` variable.  And notice that we have to select down the dataset variables to only those that are absolutely necessary for the pivoted data.
 
 ```{r}
-# install.packages("ggalt")
-library(ggalt)
-
 gapminder2 <- gapminder %>% 
   filter(continent == "Americas" &
            year %in% c(1952, 2007)) %>%
@@ -659,6 +757,9 @@ gapminder2
 Now let's visualize it.  We call the specialized `geom_dumbbell` and we have to be sure we have given it an X and Y variable, but also an `xend` which will have the second datapoint.  
 
 ```{r}
+# install.packages("ggalt")
+library(ggalt)
+
 ggplot(gapminder2, aes(y = country, 
                        x = year_1952, xend = year_2007)) +  
   geom_dumbbell()
@@ -673,7 +774,7 @@ gapminder2 %>%
   geom_dumbbell(size = 1.2,
                 size_x = 3, 
                 size_xend = 3,
-                colour = "grey", # yes, you must use the british spelling for this one
+                colour = "grey", # yes, you must use the british spelling
                 colour_x = "lightgreen", 
                 colour_xend = "darkgreen") +
   theme_minimal() + 
@@ -714,14 +815,15 @@ gapminder %>%
        caption="source: gapminder")
 ```
 
-Now take a look at how this compares to what you have to do within ggplot natively in order to have something similar.  As you can see there is a lot more formatting work that you have to put in, but the tradeoff is that you have a LOT more control over how it looks.  We won't go into this in detail, but it is important to see that you can do this without an additional package.  Think of this as slicing an avocado with a kitchen knife, while the above is using a dedicated avocado slicer.  
-
-
 ```{r}
 # one frustrating thing about the previous library is that it changes the default ggplot theme.   
 # this next line of code fixes that.
 theme_set(theme_grey()) 
+```
 
+Now take a look at how this compares to what you have to do within ggplot natively in order to have something similar.  As you can see there is a lot more formatting work that you have to put in, but the tradeoff is that you have a LOT more control over how it looks.  We won't go into this in detail, but it is important to see that you can do this without an additional package.  Think of this as slicing an avocado with a kitchen knife, while the above is using a dedicated avocado slicer.  
+
+```{r}
 # get the core data into an object
 g2 <- gapminder %>%
   filter(year %in% c(1992, 1997, 2002, 2007) &
@@ -780,7 +882,7 @@ gapminder %>%
 
 There are a few ways to clean this up, most notably getting rid of that ugly scientific notation.  Remember that we are typically communicating with non-experts, and they will not be well versed in how to read scientific notation - heck, I'm not very good at reading it!  We can fix that with a simple use of a `scales` function.  Here are all the improvements we can make:
 
-- order the continents from the largest pop to the smallest
+- order the continents from the largest pop to the smallest (using reorder!)
 - improve labeling
 - choose a different color scheme
 
@@ -799,8 +901,6 @@ gapminder %>%
   scale_fill_brewer(palette = "Set2") +
   scale_y_continuous(labels = label_number(scale = 1/1e9, suffix = "b"))
 ```
-
-Apparently, the number of young children have not changed very much in the past 100 years.
 
 Remember that stacked area charts are most useful when interest is on both (1) group change over time and (2) overall change over time. Place the most important groups at the bottom. These are the easiest to interpret in this type of plot.
 
