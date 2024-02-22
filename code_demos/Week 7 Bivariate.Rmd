@@ -8,7 +8,7 @@ output: github_document
 ## Intro and Setup
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, tidy = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 Today we'll be learning how to create visualizations in R and ggplot2 of bivariate data. For this demonstration we will be using the [Gapminder](https://www.gapminder.org/) dataset. If you have not already done so, please run `install.packages("gapminder")` so that you have the access to the data on your computer and your R environment.
@@ -297,6 +297,7 @@ gapminder %>%
   coord_flip() +
   theme(legend.position = "none")
 ```
+
 This looks great!  Notice that we remove the legend using a call to `theme` and designate the parameter `legend.position` to "none".
 
 ### Grouped Kernel Density Plots

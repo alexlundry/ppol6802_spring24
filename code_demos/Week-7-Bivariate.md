@@ -1,7 +1,7 @@
 PPOL 6802 Week 7 - Bivariate Visualization
 ================
 Alex Lundry
-2024-02-20
+2024-02-22
 
 ## Intro and Setup
 
@@ -95,9 +95,9 @@ population and then take the first 10 rows.
 
 ``` r
 d1 <- gapminder %>%
-    filter(year == 2007) %>%
-    arrange(desc(pop)) %>%
-    slice(1:10)
+  filter(year == 2007) %>%
+  arrange(desc(pop)) %>%
+  slice(1:10)
 
 d1
 ```
@@ -137,7 +137,8 @@ Now, you may think that’s all you need, but that’s a mistake, because
 look at what happens:
 
 ``` r
-ggplot(d1, aes(country)) + geom_bar()
+ggplot(d1, aes(country)) +
+  geom_bar()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
@@ -156,7 +157,9 @@ number we want to visualize, so the “stat” we assign to it is called
 for both the X *and* the Y axis:
 
 ``` r
-ggplot(d1, aes(country, pop)) + geom_bar(stat = "identity") + theme(legend.position = "none")
+ggplot(d1, aes(country, pop)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
@@ -183,13 +186,17 @@ want to sort it, you’d probably be tempted to us `fct_infreq()`, but
 let’s see what happens:
 
 ``` r
-d1 %>%
-    mutate(Billions = ifelse(pop > 1e+09, T, F)) %>%
-    ggplot(aes(fct_infreq(country), pop)) + geom_bar(aes(fill = Billions), stat = "identity") +
-    geom_text(aes(label = str_c(round(pop/1e+09, 1), "B")), hjust = 1.1, color = "white") +
-    scale_fill_manual(values = c("black", "red")) + labs(title = "Top 10 Most Populous Countries, 2007",
-    x = "", y = "2007 Population") + scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
-    coord_flip()
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  ggplot(aes(fct_infreq(country), pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
@@ -207,14 +214,18 @@ ordering of the variable’s values; it is only a temporary “cosmetic”
 change:
 
 ``` r
-d1 %>%
-    mutate(Billions = ifelse(pop > 1e+09, T, F)) %>%
-    arrange(desc(pop)) %>%
-    ggplot(aes(country, pop)) + geom_bar(aes(fill = Billions), stat = "identity") +
-    geom_text(aes(label = str_c(round(pop/1e+09, 1), "B")), hjust = 1.1, color = "white") +
-    scale_fill_manual(values = c("black", "red")) + labs(title = "Top 10 Most Populous Countries, 2007",
-    x = "", y = "2007 Population") + scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
-    coord_flip()
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  arrange(desc(pop)) %>% 
+  ggplot(aes(country, pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
@@ -229,14 +240,18 @@ in the opposite order, simply put a negative sign in front of the
 variable `reorder(country, -pop)`
 
 ``` r
-d1 %>%
-    mutate(Billions = ifelse(pop > 1e+09, T, F)) %>%
-    arrange(desc(pop)) %>%
-    ggplot(aes(reorder(country, pop), pop)) + geom_bar(aes(fill = Billions), stat = "identity") +
-    geom_text(aes(label = str_c(round(pop/1e+09, 1), "B")), hjust = 1.1, color = "white") +
-    scale_fill_manual(values = c("black", "red")) + labs(title = "Top 10 Most Populous Countries, 2007",
-    x = "", y = "2007 Population") + scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
-    coord_flip()
+d1 %>% 
+  mutate(Billions = ifelse(pop > 1000000000, T, F)) %>%
+  arrange(desc(pop)) %>% 
+  ggplot(aes(reorder(country, pop), pop)) +
+  geom_bar(aes(fill = Billions), stat = "identity") +
+  geom_text(aes(label = str_c(round(pop/1000000000, 1), "B")), hjust = 1.1, color = "white") +
+  scale_fill_manual(values = c("black", "red")) +
+  labs(title = "Top 10 Most Populous Countries, 2007",
+       x = "",
+       y  = "2007 Population") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_long_scale())) +
+  coord_flip()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
@@ -250,8 +265,10 @@ in Asia in 2007. Here it is as bars:
 
 ``` r
 gapminder %>%
-    filter(continent == "Asia" & year == 2007) %>%
-    ggplot(aes(lifeExp, country)) + geom_bar(stat = "identity")
+  filter(continent == "Asia" & 
+           year == 2007) %>% 
+  ggplot(aes(lifeExp, country)) +
+  geom_bar(stat = "identity")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
@@ -263,8 +280,10 @@ end by changing geom_bar to `geom_point()`:
 
 ``` r
 gapminder %>%
-    filter(continent == "Asia" & year == 2007) %>%
-    ggplot(aes(lifeExp, country)) + geom_point()
+  filter(continent == "Asia" & 
+           year == 2007) %>% 
+  ggplot(aes(lifeExp, country)) +
+  geom_point()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
@@ -276,8 +295,10 @@ lifeExp.
 
 ``` r
 gapminder %>%
-    filter(continent == "Asia" & year == 2007) %>%
-    ggplot(aes(lifeExp, reorder(country, lifeExp))) + geom_point()
+  filter(continent == "Asia" & 
+           year == 2007) %>% 
+  ggplot(aes(lifeExp, reorder(country, lifeExp))) +
+  geom_point()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
@@ -302,11 +323,19 @@ point to the y axis:
 
 ``` r
 gapminder %>%
-    filter(continent == "Asia" & year == 2007) %>%
-    ggplot(aes(lifeExp, reorder(country, lifeExp))) + geom_segment(aes(x = 40, xend = lifeExp,
-    y = reorder(country, lifeExp), yend = reorder(country, lifeExp)), color = "lightgrey") +
-    geom_point(color = "darkred", size = 2) + labs(x = "Life Expectancy (years)",
-    y = "", title = "Life Expectancy by Country", subtitle = "Gapminder data for Asia - 2007")
+  filter(continent == "Asia" & 
+           year == 2007) %>% 
+  ggplot(aes(lifeExp, reorder(country, lifeExp))) +
+  geom_segment(aes(x = 40, 
+               xend = lifeExp, 
+               y = reorder(country, lifeExp), 
+               yend = reorder(country, lifeExp)),
+               color = "lightgrey") +
+  geom_point(color="darkred", size = 2) +
+  labs (x = "Life Expectancy (years)",
+        y = "",
+        title = "Life Expectancy by Country",
+        subtitle = "Gapminder data for Asia - 2007")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
@@ -323,12 +352,22 @@ grey background panel and horizontal gridlines:
 
 ``` r
 gapminder %>%
-    filter(continent == "Asia" & year == 2007) %>%
-    ggplot(aes(lifeExp, reorder(country, lifeExp))) + geom_segment(aes(x = 40, xend = lifeExp,
-    y = reorder(country, lifeExp), yend = reorder(country, lifeExp)), color = "lightgrey") +
-    geom_point(color = "darkred", size = 2) + labs(x = "Life Expectancy (years)",
-    y = "", title = "Life Expectancy by Country", subtitle = "Gapminder data for Asia - 2007") +
-    theme_minimal() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  filter(continent == "Asia" & 
+           year == 2007) %>% 
+  ggplot(aes(lifeExp, reorder(country, lifeExp))) +
+  geom_segment(aes(x = 40, 
+               xend = lifeExp, 
+               y = reorder(country, lifeExp), 
+               yend = reorder(country, lifeExp)),
+               color = "lightgrey") +
+  geom_point(color="darkred", size = 2) +
+  labs (x = "Life Expectancy (years)",
+        y = "",
+        title = "Life Expectancy by Country",
+        subtitle = "Gapminder data for Asia - 2007") +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
@@ -346,9 +385,10 @@ Here we look at the distribution of the GDP per capita of countries
 within a particular region for the year 2007.
 
 ``` r
-gapminder %>%
-    filter(year == 2007) %>%
-    ggplot(aes(x = continent, y = gdpPercap)) + geom_boxplot()
+gapminder %>% 
+  filter(year ==2007) %>% 
+ggplot(aes(x = continent, y = gdpPercap)) +
+   geom_boxplot()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
@@ -368,10 +408,10 @@ median GDP per capita (Africa) to the continent with the highest
 (Oceania).
 
 ``` r
-gapminder %>%
-    filter(year == 2007) %>%
-    ggplot(aes(x = reorder(continent, gdpPercap, FUN = median), y = gdpPercap)) +
-    geom_boxplot()
+gapminder %>% 
+  filter(year ==2007) %>% 
+  ggplot(aes(x = reorder(continent, gdpPercap, FUN = median), y = gdpPercap)) +
+   geom_boxplot()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
@@ -396,15 +436,21 @@ Let’s improve this some more:
   `label_` functions when we are changing scale labels.
 
 ``` r
-gapminder %>%
-    filter(year == 2007) %>%
-    ggplot(aes(x = reorder(continent, gdpPercap, FUN = median), y = gdpPercap)) +
-    geom_boxplot(aes(fill = continent)) + labs(title = "Distribution of Country's GDP per Capita by Continent",
-    subtitle = "Gapminder 2007 data", x = "Continent", y = "GDP per Capita") + scale_y_continuous(labels = label_dollar()) +
-    coord_flip() + theme(legend.position = "none")
+gapminder %>% 
+  filter(year ==2007) %>% 
+  ggplot(aes(x = reorder(continent, gdpPercap, FUN = median), y = gdpPercap)) +
+  geom_boxplot(aes(fill = continent)) +
+  labs(title = "Distribution of Country's GDP per Capita by Continent",
+       subtitle = "Gapminder 2007 data",
+       x = "Continent",
+       y = "GDP per Capita") +
+  scale_y_continuous(labels = label_dollar()) +
+  coord_flip() +
+  theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
 This looks great! Notice that we remove the legend using a call to
 `theme` and designate the parameter `legend.position` to “none”.
 
@@ -420,7 +466,8 @@ As before with the boxplots, all we need to do is change the geom and
 add a new aesthetic call mapping `fill` to our categorical variable:
 
 ``` r
-ggplot(gapminder, aes(x = gdpPercap, fill = continent)) + geom_density()
+ggplot(gapminder, aes(x = gdpPercap, fill = continent)) +
+   geom_density()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
@@ -434,7 +481,8 @@ overlapping them all on the same axis. This allows for a more direct
 comparison.
 
 ``` r
-ggplot(gapminder, aes(x = gdpPercap, fill = continent)) + geom_density(alpha = 0.4)
+ggplot(gapminder, aes(x = gdpPercap, fill = continent)) +
+   geom_density(alpha = 0.4)
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -460,11 +508,13 @@ is highly likely that the distributions will overlap, you’ll want to set
 the alpha in `geom_density_ridges` to some value less than 1.
 
 ``` r
-# install.packages('ggridges')
+# install.packages("ggridges")
 library(ggridges)
 
-ggplot(gapminder, aes(x = gdpPercap, y = continent, fill = continent)) + geom_density_ridges(alpha = 0.4) +
-    theme_ridges() + theme(legend.position = "none")  # legend is redundant since we already have continent on Y
+ggplot(gapminder, aes(x = gdpPercap, y = continent, fill = continent)) +
+  geom_density_ridges(alpha = 0.4) +
+  theme_ridges() +
+  theme(legend.position = "none") # legend is redundant since we already have continent on Y
 ```
 
     ## Picking joint bandwidth of 1650
@@ -491,11 +541,11 @@ function specifies the top 5, it inherits the grouping from the
 `group_by` so it gives the top 5 within each group):
 
 ``` r
-g1 <- gapminder %>%
-    filter(year == 2007) %>%
-    group_by(continent) %>%
-    arrange(desc(pop)) %>%
-    slice(1:5)
+g1 <- gapminder %>% 
+   filter(year == 2007) %>% 
+   group_by(continent) %>% 
+   arrange(desc(pop)) %>% 
+   slice(1:5) 
 
 g1
 ```
@@ -519,8 +569,9 @@ g1
 First, let’s see what happens if we call `geom_bar` here:
 
 ``` r
-g1 %>%
-    ggplot(aes(continent, pop)) + geom_bar(stat = "identity")
+g1 %>% 
+  ggplot(aes(continent, pop)) +
+  geom_bar(stat = "identity") 
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
@@ -532,9 +583,10 @@ another. Those are each continent’s bars dividing into their respective
 countries. This will be easier to see if we map fill to country:
 
 ``` r
-g1 %>%
-    ggplot(aes(continent, pop)) + geom_bar(stat = "identity", aes(fill = country)) +
-    theme(legend.position = "none")
+g1 %>% 
+  ggplot(aes(continent, pop)) +
+  geom_bar(stat = "identity", aes(fill = country)) +
+  theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
@@ -557,9 +609,10 @@ position in the geom_bar call. Again, not a great chart, but this should
 serve for demonstration purposes when it comes to “position.”
 
 ``` r
-g1 %>%
-    ggplot(aes(continent, pop)) + geom_bar(stat = "identity", aes(fill = country),
-    position = "dodge") + theme(legend.position = "none")
+g1 %>% 
+   ggplot(aes(continent, pop)) +
+   geom_bar(stat = "identity", aes(fill = country), position = "dodge") +
+   theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
@@ -573,9 +626,10 @@ stacked bar chart. It’s not a great chart, for it can be massively
 improved, but hopefully you get the point.
 
 ``` r
-g1 %>%
-    ggplot(aes(continent, pop)) + geom_bar(stat = "identity", aes(fill = country),
-    position = "fill") + theme(legend.position = "none")
+g1 %>% 
+   ggplot(aes(continent, pop)) +
+   geom_bar(stat = "identity", aes(fill = country), position = "fill") +
+   theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
@@ -597,7 +651,8 @@ declare these as our aesthetics and then the geom mapping we use is
 `geom_point`.
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point()
+ggplot(gapminder, aes(gdpPercap, lifeExp)) +
+   geom_point()
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
@@ -613,7 +668,9 @@ loess smoother, and then returns predictions from evenly spaced points
 within the range of the data.
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point() + geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp)) +
+   geom_point() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
@@ -626,7 +683,10 @@ This can be done by adding a scale_x statement; in this case
 `scale_x_log10`, which transforms the X axis into log scale.
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point() + scale_x_log10() + geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp)) +
+   geom_point() +
+   scale_x_log10() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
@@ -660,8 +720,10 @@ insight into how the relationship between GDP per capita and life
 expectancy vary by continent:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) + geom_point() + scale_x_log10() +
-    geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
+   geom_point() +
+   scale_x_log10() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -676,8 +738,10 @@ You could even add another variable to the same plot by adding an
 aesthetic mapping to something like size:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) + geom_point(aes(size = pop)) +
-    scale_x_log10() + geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
+   geom_point(aes(size = pop)) +
+   scale_x_log10() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -688,8 +752,10 @@ Here it is changing our size mapping to an alpha mapping, which arguably
 works a little better:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) + geom_point(aes(alpha = pop)) +
-    scale_x_log10() + geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
+   geom_point(aes(alpha = pop)) +
+   scale_x_log10() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -699,8 +765,10 @@ ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) + geom_point(aes(a
 Why not do both?
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) + geom_point(aes(size = pop,
-    alpha = pop)) + scale_x_log10() + geom_smooth()
+ggplot(gapminder, aes(gdpPercap, lifeExp, color = continent)) +
+   geom_point(aes(size = pop, alpha = pop)) +
+   scale_x_log10() +
+   geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -742,8 +810,12 @@ take a detailed look at the call below:
   separate geom_smooth lines for each subsetted plot
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) +
-    geom_smooth() + scale_x_log10() + facet_wrap(~continent)
+ggplot(gapminder, 
+   aes(gdpPercap, lifeExp)) +
+   geom_point(aes(color = continent)) +
+   geom_smooth() +
+   scale_x_log10() +
+   facet_wrap(~ continent)
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -766,8 +838,12 @@ passing it a `scales` argument of one of the following:
 Let’s see how it looks with scales = free:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) +
-    geom_smooth() + scale_x_log10() + facet_wrap(~continent, scales = "free")
+ggplot(gapminder, 
+   aes(gdpPercap, lifeExp)) +
+   geom_point(aes(color = continent)) +
+   geom_smooth() +
+   scale_x_log10() +
+   facet_wrap(~ continent, scales = "free")
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -796,8 +872,12 @@ separate rows, forcing the display into a single column.
 Take a look at it in action. Here they are in a single row:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) +
-    geom_smooth() + scale_x_log10() + facet_grid(. ~ continent, scales = "free")  # display in single row
+ggplot(gapminder, 
+   aes(gdpPercap, lifeExp)) +
+   geom_point(aes(color = continent)) +
+   geom_smooth() +
+   scale_x_log10() +
+   facet_grid(. ~ continent, scales = "free") # display in single row
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -807,8 +887,12 @@ ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) 
 And here they are in a single column:
 
 ``` r
-ggplot(gapminder, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) +
-    geom_smooth() + scale_x_log10() + facet_grid(continent ~ ., scales = "free")  # display in single column
+ggplot(gapminder, 
+   aes(gdpPercap, lifeExp)) +
+   geom_point(aes(color = continent)) +
+   geom_smooth() +
+   scale_x_log10() +
+   facet_grid(continent ~ ., scales = "free") # display in single column
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -827,13 +911,17 @@ low-dimensional categorical variable in the dataset, we’ll make one up
 to show how `facet_grid` would work:
 
 ``` r
-d2 <- gapminder %>%
-    group_by(country) %>%
-    mutate(rand = sample(0:1, n(), replace = TRUE), cool = ifelse(rand == 0, "not cool",
-        "cool"))
+d2 <- gapminder %>% 
+   group_by(country) %>% 
+   mutate(rand = sample(0:1, n(), replace = TRUE), 
+          cool = ifelse(rand == 0, "not cool", "cool"))
 
-ggplot(d2, aes(gdpPercap, lifeExp)) + geom_point(aes(color = continent)) + geom_smooth() +
-    scale_x_log10() + facet_grid(continent ~ cool, scales = "free_y")
+ggplot(d2, 
+   aes(gdpPercap, lifeExp)) +
+   geom_point(aes(color = continent)) +
+   geom_smooth() +
+   scale_x_log10() +
+   facet_grid(continent ~ cool, scales = "free_y")
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -846,8 +934,10 @@ It doesn’t have to be a scatterplot that gets faceted. Check it out here
 where we use it on the density plot we created earlier.
 
 ``` r
-ggplot(d2, aes(x = gdpPercap, fill = continent)) + geom_density(alpha = 0.4) + facet_grid(continent ~
-    cool, scales = "free") + theme(legend.position = "none")
+ggplot(d2, aes(x = gdpPercap, fill = continent)) +
+   geom_density(alpha = 0.4) +
+  facet_grid(continent ~ cool, scales = "free") +
+  theme(legend.position = "none")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
@@ -870,9 +960,10 @@ look at how life expectancy has changed over the years in the United
 States:
 
 ``` r
-gapminder %>%
-    filter(country == "United States") %>%
-    ggplot(aes(year, lifeExp)) + geom_line()
+gapminder %>% 
+  filter(country == "United States") %>% 
+  ggplot(aes(year, lifeExp)) +
+  geom_line() 
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
@@ -891,12 +982,19 @@ rounding to the number and then setting the label to the right of the
 point with an `hjust`.
 
 ``` r
-gapminder %>%
-    filter(country == "United States") %>%
-    ggplot(aes(year, lifeExp)) + geom_line(size = 1.5, color = "lightgrey") + geom_point(size = 3,
-    color = "steelblue") + geom_text(aes(label = round(lifeExp, 1)), hjust = -0.3) +
-    labs(y = "Life Expectancy (years)", x = "Year", title = "Life expectancy changes over time",
-        subtitle = "United States (1952-2007)", caption = "Source: http://www.gapminder.org/data/")
+gapminder %>% 
+  filter(country == "United States") %>% 
+  ggplot(aes(year, lifeExp)) +
+  geom_line(size = 1.5, 
+            color = "lightgrey") +
+  geom_point(size = 3, 
+             color = "steelblue") +
+  geom_text(aes(label = round(lifeExp, 1)), hjust = -0.3) +
+  labs(y = "Life Expectancy (years)", 
+       x = "Year",
+       title = "Life expectancy changes over time",
+       subtitle = "United States (1952-2007)",
+       caption = "Source: http://www.gapminder.org/data/")
 ```
 
     ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
@@ -914,8 +1012,11 @@ Let’s plot the personal savings rate (psavert) over time using our
 simple line plot.
 
 ``` r
-ggplot(economics, aes(date, psavert)) + geom_line() + labs(title = "Personal Savings Rate",
-    x = "Date", y = "Personal Savings Rate")
+ggplot(economics, aes(date, psavert)) +
+  geom_line() +
+  labs(title = "Personal Savings Rate",
+       x = "Date",
+       y = "Personal Savings Rate")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
@@ -928,10 +1029,17 @@ tweaks, giving the line some color and setting the size, adding a loess
 smoother, putting labels on the plot and simplifying the theme.
 
 ``` r
-ggplot(economics, aes(x = date, y = psavert)) + geom_line(color = "indianred3", size = 1) +
-    geom_smooth() + scale_x_date(date_breaks = "5 years", labels = label_date("%b-%y")) +
-    labs(title = "Personal Savings Rate", subtitle = "1967 to 2015", x = "", y = "Personal Savings Rate") +
-    theme_minimal()
+ggplot(economics, aes(x = date, y = psavert)) +
+  geom_line(color = "indianred3", 
+            size= 1) +
+  geom_smooth() +
+  scale_x_date(date_breaks = '5 years', 
+               labels = label_date("%b-%y")) +
+  labs(title = "Personal Savings Rate",
+       subtitle = "1967 to 2015",
+       x = "",
+       y = "Personal Savings Rate") +
+  theme_minimal()
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
@@ -942,8 +1050,11 @@ This can just as easily be turned into an area chart, by changing to a
 `geom_area`.
 
 ``` r
-ggplot(economics, aes(date, psavert)) + geom_area() + labs(title = "Personal Savings Rate",
-    x = "Date", y = "Personal Savings Rate")
+ggplot(economics, aes(date, psavert)) +
+  geom_area() +
+  labs(title = "Personal Savings Rate",
+       x = "Date",
+       y = "Personal Savings Rate")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
@@ -952,8 +1063,11 @@ If we wanted to get a little fancy, we can change the fixed values of
 the area’s fill and line color:
 
 ``` r
-ggplot(economics, aes(date, psavert)) + geom_area(fill = "lightblue", color = "yellow") +
-    labs(title = "Personal Savings Rate", x = "Date", y = "Personal Savings Rate")
+ggplot(economics, aes(date, psavert)) +
+  geom_area(fill="lightblue", color="yellow") +
+  labs(title = "Personal Savings Rate",
+       x = "Date",
+       y = "Personal Savings Rate")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
@@ -972,7 +1086,7 @@ series, in this case `symbol`. Take a look at the data so you understand
 this:
 
 ``` r
-# install.packages('tidyquant')
+# install.packages("tidyquant")
 library(tidyquant)
 ```
 
@@ -1033,7 +1147,7 @@ stocks <- tq_get(c("AAPL", "NFLX"), get = "stock.prices")
 stocks
 ```
 
-    ## # A tibble: 5,098 × 8
+    ## # A tibble: 5,102 × 8
     ##    symbol date        open  high   low close    volume adjusted
     ##    <chr>  <date>     <dbl> <dbl> <dbl> <dbl>     <dbl>    <dbl>
     ##  1 AAPL   2014-01-02  19.8  19.9  19.7  19.8 234684800     17.3
@@ -1046,7 +1160,7 @@ stocks
     ##  8 AAPL   2014-01-13  18.9  19.4  18.9  19.1 378492800     16.8
     ##  9 AAPL   2014-01-14  19.2  19.5  19.2  19.5 332561600     17.1
     ## 10 AAPL   2014-01-15  19.8  20.0  19.7  19.9 391638800     17.4
-    ## # ℹ 5,088 more rows
+    ## # ℹ 5,092 more rows
 
 It is much easier to put multiple lines on a plot when the data is long
 and you have a variable that can easily be used to distinguish the lines
@@ -1059,10 +1173,18 @@ some modifications to the axes through `scale_x_date` and
 the colors using a pre-built palette.
 
 ``` r
-ggplot(stocks, aes(date, close, color = symbol)) + geom_line(size = 1) + scale_x_date(date_breaks = "1 year",
-    labels = label_date("%Y")) + scale_y_continuous(labels = label_dollar()) + labs(title = "NASDAQ Closing Prices",
-    subtitle = "2013 - 2023", caption = "source: Yahoo Finance", x = "Year", y = "Closing Price") +
-    theme_minimal() + scale_color_brewer(palette = "Dark2")
+ggplot(stocks, aes(date, close, color=symbol)) + 
+  geom_line(size=1) +
+  scale_x_date(date_breaks = '1 year', 
+               labels = label_date("%Y")) +
+  scale_y_continuous(labels = label_dollar()) +
+  labs(title = "NASDAQ Closing Prices",
+       subtitle = "2013 - 2023",
+       caption = "source: Yahoo Finance",
+       x = "Year",
+       y = "Closing Price") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Dark2")
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
@@ -1075,14 +1197,14 @@ around with it, as it can be extremely useful. But for now, take a look
 at how it changes the data:
 
 ``` r
-wide_stocks <- stocks %>%
-    select(symbol, date, close) %>%
-    pivot_wider(values_from = close, names_from = symbol)
+wide_stocks <- stocks %>% 
+  select(symbol, date, close) %>% 
+  pivot_wider(values_from = close, names_from = symbol)
 
 wide_stocks
 ```
 
-    ## # A tibble: 2,549 × 3
+    ## # A tibble: 2,551 × 3
     ##    date        AAPL  NFLX
     ##    <date>     <dbl> <dbl>
     ##  1 2014-01-02  19.8  51.8
@@ -1095,7 +1217,7 @@ wide_stocks
     ##  8 2014-01-13  19.1  48.1
     ##  9 2014-01-14  19.5  48.3
     ## 10 2014-01-15  19.9  47.2
-    ## # ℹ 2,539 more rows
+    ## # ℹ 2,541 more rows
 
 You will frequently receive data that looks like this. It’s not
 impossible to visualize, but it would mean you have two separate
@@ -1103,11 +1225,18 @@ geom_line calls with two separate aesthetic mappings. This is harder to
 “read” and can be more confusing for collaboraters or “future you.”
 
 ``` r
-ggplot(wide_stocks, aes(x = date)) + geom_line(aes(y = AAPL), size = 1, color = "black") +
-    geom_line(aes(y = NFLX), size = 1, color = "red") + scale_x_date(date_breaks = "1 year",
-    labels = label_date("%Y")) + scale_y_continuous(labels = label_dollar()) + labs(title = "NASDAQ Closing Prices",
-    subtitle = "2013 - 2023", caption = "source: Yahoo Finance", x = "Year", y = "Closing Price") +
-    theme_minimal()
+ggplot(wide_stocks, aes(x = date)) + 
+  geom_line(aes(y = AAPL), size=1, color = "black") +
+  geom_line(aes(y = NFLX), size = 1, color = "red") +
+  scale_x_date(date_breaks = '1 year', 
+               labels = label_date("%Y")) +
+  scale_y_continuous(labels = label_dollar()) +
+  labs(title = "NASDAQ Closing Prices",
+       subtitle = "2013 - 2023",
+       caption = "source: Yahoo Finance",
+       x = "Year",
+       y = "Closing Price") +
+  theme_minimal() 
 ```
 
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
@@ -1134,10 +1263,12 @@ have to select down the dataset variables to only those that are
 absolutely necessary for the pivoted data.
 
 ``` r
-gapminder2 <- gapminder %>%
-    filter(continent == "Americas" & year %in% c(1952, 2007)) %>%
-    select(country, year, lifeExp) %>%
-    pivot_wider(names_from = year, values_from = lifeExp, names_prefix = "year_")
+gapminder2 <- gapminder %>% 
+  filter(continent == "Americas" &
+           year %in% c(1952, 2007)) %>%
+  select(country, year, lifeExp) %>% 
+  pivot_wider(names_from = year, 
+              values_from = lifeExp, names_prefix = "year_")
 
 gapminder2
 ```
@@ -1162,7 +1293,7 @@ have to be sure we have given it an X and Y variable, but also an `xend`
 which will have the second datapoint.
 
 ``` r
-# install.packages('ggalt')
+# install.packages("ggalt")
 library(ggalt)
 ```
 
@@ -1175,7 +1306,9 @@ library(ggalt)
     ##   grobY.absoluteGrob      ggplot2
 
 ``` r
-ggplot(gapminder2, aes(y = country, x = year_1952, xend = year_2007)) + geom_dumbbell()
+ggplot(gapminder2, aes(y = country, 
+                       x = year_1952, xend = year_2007)) +  
+  geom_dumbbell()
 ```
 
     ## Warning: Using the `size` aesthetic with geom_segment was deprecated in ggplot2 3.4.0.
@@ -1236,7 +1369,7 @@ you can make to things like line thickness - check the help page for
 details.
 
 ``` r
-# install.packages('CGPfunctions')
+# install.packages("CGPfunctions")
 library(CGPfunctions)
 ```
 
@@ -1245,11 +1378,17 @@ library(CGPfunctions)
 
 ``` r
 gapminder %>%
-    filter(year %in% c(1992, 1997, 2002, 2007) & country %in% c("Panama", "Costa Rica",
-        "Nicaragua", "Honduras", "El Salvador", "Guatemala", "Belize")) %>%
-    mutate(year = factor(year), lifeExp = round(lifeExp)) %>%
-    newggslopegraph(year, lifeExp, country) + labs(title = "Life Expectancy by Country",
-    subtitle = "Central America", caption = "source: gapminder")
+  filter(year %in% c(1992, 1997, 2002, 2007) &
+           country %in% c("Panama", "Costa Rica", 
+                          "Nicaragua", "Honduras", 
+                          "El Salvador", "Guatemala",
+                          "Belize")) %>%
+  mutate(year = factor(year),
+         lifeExp = round(lifeExp)) %>% 
+  newggslopegraph(year, lifeExp, country) +
+  labs(title="Life Expectancy by Country", 
+       subtitle="Central America", 
+       caption="source: gapminder")
 ```
 
     ## 
@@ -1258,9 +1397,9 @@ gapminder %>%
 ![](Week-7-Bivariate_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 ``` r
-# one frustrating thing about the previous library is that it changes the
-# default ggplot theme.  this next line of code fixes that.
-theme_set(theme_grey())
+# one frustrating thing about the previous library is that it changes the default ggplot theme.   
+# this next line of code fixes that.
+theme_set(theme_grey()) 
 ```
 
 Now take a look at how this compares to what you have to do within
@@ -1324,11 +1463,14 @@ categories, comprehension becomes more and more difficult. Let’s take a
 look at how the population of each continent has grown over time:
 
 ``` r
-gapminder %>%
-    group_by(continent, year) %>%
-    summarize(total_pop = sum(pop)) %>%
-    ggplot(aes(year, total_pop, fill = continent)) + geom_area() + labs(title = "World Population by Continent",
-    x = "Year", y = "Population")
+gapminder %>% 
+  group_by(continent, year) %>% 
+  summarize(total_pop = sum(pop)) %>% 
+  ggplot(aes(year, total_pop, fill = continent)) +
+  geom_area() +
+  labs(title = "World Population by Continent",
+       x = "Year",
+       y = "Population")
 ```
 
     ## `summarise()` has grouped output by 'continent'. You can override using the
@@ -1350,13 +1492,18 @@ improvements we can make:
 
 ``` r
 # stacked area chart
-gapminder %>%
-    group_by(continent, year) %>%
-    summarize(total_pop = sum(pop)) %>%
-    ggplot(aes(year, total_pop, fill = reorder(continent, total_pop))) + geom_area() +
-    labs(title = "World Population by Continent", x = "Year", y = "Population (billions)",
-        fill = "Continent") + scale_fill_brewer(palette = "Set2") + scale_y_continuous(labels = label_number(scale = 1/1e+09,
-    suffix = "b"))
+gapminder %>% 
+  group_by(continent, year) %>% 
+  summarize(total_pop = sum(pop)) %>% 
+  ggplot(aes(year, total_pop, 
+             fill = reorder(continent, total_pop))) +
+  geom_area() +
+  labs(title = "World Population by Continent",
+       x = "Year",
+       y = "Population (billions)",
+       fill = "Continent")+
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = label_number(scale = 1/1e9, suffix = "b"))
 ```
 
     ## `summarise()` has grouped output by 'continent'. You can override using the
@@ -1377,14 +1524,19 @@ of total, and then mapping that to a ggplot aesthetic.
 
 ``` r
 # 100% stacked area chart
-gapminder %>%
-    group_by(year) %>%
-    mutate(global_pop = sum(pop)) %>%
-    group_by(continent, year) %>%
-    summarize(total_pop = sum(pop), total_pop_pct = total_pop/global_pop) %>%
-    ggplot(aes(year, total_pop_pct, fill = reorder(continent, total_pop))) + geom_area(color = "white") +
-    scale_y_continuous(labels = label_percent()) + labs(title = "% of World Population by Continent",
-    x = "Year", y = "% of World Population", fill = "Continent")
+gapminder %>% 
+  group_by(year) %>% 
+  mutate(global_pop = sum(pop)) %>% 
+  group_by(continent, year) %>% 
+  summarize(total_pop = sum(pop),
+            total_pop_pct = total_pop / global_pop) %>% 
+  ggplot(aes(year, total_pop_pct, fill = reorder(continent, total_pop))) +
+  geom_area(color = "white") +
+  scale_y_continuous(labels = label_percent()) +
+  labs(title = "% of World Population by Continent",
+       x = "Year",
+       y = "% of World Population", 
+       fill = "Continent")
 ```
 
     ## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
