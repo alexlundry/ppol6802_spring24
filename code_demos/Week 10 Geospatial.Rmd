@@ -129,7 +129,7 @@ dma_conus <- dma %>%
    st_transform('EPSG:6350')
 ```
 
-In the `st_transform` function, the information we gave it was obtained from EPSG.org[https://epsg.org] which has a collection of standardized map projections.  You use the search function to tell it the projection you like and the general geographic area you are visualizing.  It will tell you the code that will display the best for your circumstances.  You can think of the this as sort of "camera lens" for your visualization.  When taking a photo lenses ensure that you are representing your subject appropriately.  A bad lens will distort the image.  The EPSG code contains information on the map projection you are using AND the specific area of the world you are visualizing.  The projection does macro adjustments to the image and the specific area of the world provides micro adjustments.
+In the `st_transform` function, the information we gave it was obtained from EPSG.org[https://epsg.org] which has a collection of standardized map projections.  You use the search function to tell it the projection you like and the general geographic area you are visualizing.  It will tell you the code that will display the best for your circumstances.  You can think of the this as sort of "camera lens" for your visualization.  When taking a photo lenses ensure that you are representing your subject appropriately.  A bad lens will distort the image.  The EPSG code contains information on the map projection you are using AND the specific area of the world you are visualizing.  The projection does macro adjustments to the image and the specific area of the world provides micro adjustments. Here we are giving it a code for an Albers projection of the continental United States.
 
 So we now have a well-prepared dataset that is capable of drawing a map.  The `geom_sf()` function allows you to plot geospatial objects in any **ggplot2** object. Since the x and y coordinates are implied by the geometry of the sf object, you don’t have to explicitly bind the x aesthetic to the longitudinal coordinate and the y aesthetic to the latitude. 
 
@@ -138,7 +138,18 @@ ggplot(dma_conus) +
    geom_sf()
 ```
 
-Congratulations!  You just made your first map.  It isn't all that helpful, but it is showing us how media markets are distributed across the continental United States.  How can we make this more interesting?  We can turn it into a choropleth map.
+Congratulations!  You just made your first map.  Remember that it is an Albers projection of the continental United States showing us how media markets are distributed.
+
+But what if you hate Albers projections and you are ride or die for Mercator?  Well, that's weird, but fine.  It's easy enough to change by simply calling `st_transform` and passing it an EPSG code that corresponds to the Mercator projector:
+
+```{r}
+dma_conus %>% 
+   st_transform('EPSG:3857') %>% 
+   ggplot() + 
+   geom_sf()
+```
+
+Check out that straight as an arrow northern border!  But it's still not that helpful.  How can we make this more interesting?  We can turn it into a choropleth map.
 
 ### Choropleth Maps
 
