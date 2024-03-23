@@ -8,7 +8,7 @@ output: html_document
 
 Animation of plots in R can be fairly straightforward.  It can also be stunningly complex.  We'll focus on the straightforward ones - you'll have to wrap your head around some of the lingo, but once you get the drift it's not that difficult.  
 
-We'll be using `gganimate` to do our animating. If you don't already have `gifski` or `av` as an installed library, you'll want to do that (these are what support the creation of GIF and movie files respectively.  Yet again, we'll be using the `gapminder` dataset.
+We'll be using `gganimate` to do our animating. If you don't already have this or `gifski` and `av` as an installed library, you'll want to do that (these are what support the creation of GIF and movie files respectively.  Yet again, we'll be using the `gapminder` dataset.
 
 ## Animated Bubble Chart
 
@@ -49,7 +49,7 @@ To turn it into an animation, we simply add a few functions:
 
 1.  a new `labs` function overwrites the previous one, so we can **dynamically** display the changing years as the data points move across the plot.  Note the curly brackets enclosing the variable `frame_time` that will allow the year to dynamically display.
 2.  the `transition_time` function takes in the year variable as an input and it allows the animated plot to transition frame by frame as a function of the year variable.
-3.  `ease_aes` function takes in linear as an input argument and it defines how the transition occurs from frame to frame (in this case, linear).
+3.  `ease_aes` function takes in linear as an input argument and it defines how the transition occurs from frame to frame (in this case, linear). More on this below...
 4.  since we saved this to p2, we now need to explicitly display it, so we call the `animate` function.
 5.  the `anim_save` function allows the animated plot to be rendered to a .GIF file.
 
@@ -87,7 +87,7 @@ I wouldn't overthink this - just choose something that looks good to you!
 
 ### Show preceding frames with gradual falloff
 
-We can use `shadow_wake()` to draw a small wake after the data by showing the latest frames up to the current. You can choose to gradually diminish the size and/or opacity of the shadow. The length of the wake is not given in absolute frames, it is given as a proportion of the total length of the animation, so the example below gives us a wake of points from the last 30% of frames.  The alpha value is set here to FALSE so that the shadows are not transparent, but you can either set that to TRUE or a numeric (0-1) indicating what the alpha should be.
+We can use `shadow_wake()` to draw a small wake after the data by showing the latest frames up to the current. You can choose to gradually diminish the size and/or opacity of the shadow. The length of the wake is not given in absolute frames, it is given as a proportion of the total length of the animation, so the example below gives us a wake of points from the last 30% of frames.  The alpha value is set here to FALSE so that the shadows are not transparent, but you can either set that to TRUE or a numeric (0-1) indicating what the alpha should be.  Notice that we are simply layering on a `shadow_wake()` function call to the previously saved p2 object.
 
 ```{r message=FALSE, warning=FALSE}
 p3 <- p2 + 
@@ -100,8 +100,7 @@ anim_save("gapminder2.gif")
 
 ### Show the original data as trail
 
-Alternatively we can use `shadow_trail()` to show the original data as a trail.  The parameter `distance` means the animation will keep the points from 30% of
-the frames, spaced as evenly as possible.
+Alternatively we can use `shadow_trail()` to show the original data as a trail.  The parameter `distance` means the animation will keep the points from 30% of the frames, spaced as evenly as possible.
 
 ```{r message=FALSE, warning=FALSE}
 p4 <- p2 +
@@ -114,7 +113,7 @@ anim_save("gapminder3.gif")
 
 ### Reveal data along a given dimension
 
-We can also use gganimate to reveal data along a specific dimension.  This is most useful for time series data in which you can show the change over time.  Below we've created a standard line plot of lifeExp by country, filtered to just show countries in Asia.
+We can also use **gganimate** to reveal data along a specific dimension.  This is most useful for time series data in which you can show the change over time.  Below we've created a standard line plot of lifeExp by country, filtered to just show countries in Asia.
 
 ```{r message=FALSE, warning=FALSE}
 p5 <- ggplot(gapminder %>% filter(continent == "Asia"), aes(year, lifeExp, color = country)) +
@@ -181,7 +180,7 @@ The architecture is very similar to ggplot2, but instead of putting data-based l
 
 A leaflet map widget is created with the `leaflet()` command. We then add layers to the widget. The first layer that we will add is a tile layer containing all of the static map information, which by default comes from OpenStreetMap. The second layer we will add here is a marker, which designates a point location. Notice how the `addMarkers()` function can take a data argument, just like a geom\_\*() layer in ggplot2 would.
 
-Below, we get started by creating a data frame containing the White House and then call tidygeocoder's `geocode` function to get lat and long.  After loading the leaflet library, we create a new objeect by calling `leaflet` to create a widget, `add_tiles` and finally `addMarkers` in which we designate the data set.  
+Below, we get started by creating a data frame containing the White House and then call tidygeocoder's `geocode` function to get lat and long.  After loading the leaflet library, we create a new object by calling `leaflet` to create a widget, `add_tiles` and finally `addMarkers` in which we designate the data set.  
 
 ```{r message=FALSE, warning=FALSE}
 white_house <- tibble(
@@ -245,44 +244,32 @@ And this is a great [website](http://leaflet-extras.github.io/leaflet-providers/
 You can create choropleth maps in Leaflet.  Here we'll be showing 2016 House election results in NC using the `fec16` package that has detailed election results.  We call their `results_house` dataset, do some clean up and then join it into their `candidates` dataset.  From there we filter to North Carolina, group by the district and create some summary variables for each CD.  
 
 ```{r message=FALSE, warning=FALSE}
-# devtools::install_github("baumer-lab/fec16")
-library(fec16)
+library(socviz)
 
-nc_results <- results_house %>% # built in fec16 data
-   mutate(district = parse_number(district_id)) %>% 
-   left_join(candidates, by = "cand_id") %>% # candidates is also built in fec16 data
-   select(state, district, cand_name, party, general_votes) %>% 
-   arrange(desc(general_votes)) %>% 
-   filter(state == "NC") %>% 
-   group_by(state, district) %>% 
-   summarize(N = n(), 
-             total_votes = sum(general_votes, na.rm = T),
-             d_votes = sum(ifelse(party == "DEM", general_votes, 0), na.rm = T),
-             r_votes = sum(ifelse(party == "REP", general_votes, 0), na.rm = T),
-             other_votes = total_votes - d_votes - r_votes, 
-             r_prop = r_votes / total_votes, 
-             winner = ifelse(r_votes > d_votes, "Republican", "Democrat"))
+nc_results <- county_data %>% # built in soviz data
+   select(state, id, name, per_gop_2016) %>% 
+   filter(state == "NC",
+          name != "34")
 
 nc_results
 ```
 
-Now we need a congressional district shapefile for the 114th Congress. Remember that the `USAboundaries` package has CD files. We also need to load up the `sf` library so we can work with sf data.
+Now we need a NC counties shapefile.  Remember that we can go to the `tigris` package here for this. We also need to load up the `sf` library so we can work with sf data.
 
 ```{r message=FALSE, warning=FALSE}
 library(sf)
-library(USAboundaries)
-nc_map <- us_congressional(resolution = "high", states = "NC")
+library(tigris)
+nc_map <- counties(state = c("NC"))
 
-ggplot(nc_map) +
-   geom_sf()
+nc_map
 ```
 
-We need to merge in the election data with the shape file. Here we merge the nc_shp polygons with the nc_results election data frame using the district as the key.
+We need to merge in the election data with the shape file. The `nc_results` data has an `id` field that 5 characters long, everyone starting with 37.  The `nc_map` file has a `STATEFP` 2 character variable that is always 37, and `COUNTYFP` that is three characters long.  These are the FIPS codes that are the standardized ids for US states and counties.  So in order to merge the nc_shp polygons with the nc_results election data frame we will need to concatenate `STATEFP` and `COUNTYFP` into a new variable named `id`, then join the two datasets together.
 
 ```{r message=FALSE, warning=FALSE}
 nc_merged <- nc_map %>% 
-   mutate(district = str_remove(cd116fp, "^0+") %>% as.numeric) %>% # removing the leading zero in the CD designator 
-   left_join(nc_results, by = "district")
+   mutate(id = str_c(STATEFP, COUNTYFP)) %>% # creating a new ID that puts the state and county one together 
+   left_join(nc_results, by = "id")
 
 glimpse(nc_merged)
 ```
@@ -309,28 +296,55 @@ pal
 To make the plot in Leaflet, we have to add the tiles, and then the polygons defined by the sf object nc_merged. Since it is already an SF object, we do not need to give it any explicit polygon arguments in terms of X and Y.  Instead, we need to manipulate the weight, fillOpacity, and color, while also designating the text of the popup.  
 
 - The weight controls the stroke width in pixels.  
-- The fillOpacity does what you think it would, functioning essentially as an alpha argument.  
-- Since we chose a Red to Blue color pallete that mapped from 0 to 1, we actually need to flip the variable in order to associate higher values with Red.  Thus we map '1-r_prop' to color; notice how we put a tilde in front of it to indicate that it is a function call.  
-- The popup argument is also a function since it will vary based on the object.  That function creates text that shows the district number and the proportion of Republican votes.
+- The color indicates what the border color should be.
+- fillColor is how the polygons should be colored; here is where we call the function we created above.
+- The fillOpacity does what you think it would, functioning essentially as an alpha argument.  Since we chose a Red to Blue color pallete that mapped from 0 to 1, we actually need to flip the variable in order to associate higher values with Red.  Thus we map '1-per_gop_2016' to color; notice how we put a tilde in front of it to indicate that it is a function call.  
+- The popup argument is also a function since it will vary based on the object.  That function creates text that shows the district number and the proportion of Republican votes.  Notice that to do a line break here, we have to use HTML code `</br>` because this is an interactive viz rendered in HTML.
 
 ```{r message=FALSE, warning=FALSE}
 leaflet_nc <- leaflet(nc_merged) %>% 
    addProviderTiles(providers$CartoDB.Positron) %>% 
    addPolygons(
-      weight = 5, 
+      weight = 1,
+      color = "grey",
+      fillColor = ~pal(1-per_gop_2016),
       fillOpacity = 0.9,
-      color = ~pal(r_prop),
-      popup = ~str_c("District ", district, "</br>", "GOP = ", round(r_prop * 100, 0), "%")) %>% 
+      popup = ~str_c("<b>", name, "</b></br>", "GOP = ", round(per_gop_2016 * 100, 0), "%")) %>% 
    setView(lng = -80, lat = 35, zoom = 7)
 
 leaflet_nc
 ```
 
+We might want to add a state border here.  To do so, we'll need to get a state sf object using `tigris`, and then we simply add another `addPolygons` function call, this time pointing it specifically at the state sf object.  We can set some options like the weight and color of the border, but the most important thing to do here is to tell it NOT to fill the object because that would obstruct our county fills.
+
+```{r}
+nc_state_map <- states() %>% 
+   filter(NAME == "North Carolina")
+
+leaflet_nc <- leaflet(nc_merged) %>% 
+   addProviderTiles(providers$CartoDB.Positron) %>% 
+   addPolygons(
+      weight = 1,
+      color = "grey",
+      fillColor = ~pal(1-per_gop_2016),
+      fillOpacity = 0.9,
+      popup = ~str_c("<b>", name, "</b></br>", "GOP = ", round(per_gop_2016 * 100, 0), "%")) %>% 
+   addPolygons(
+      data = nc_state_map,
+      weight = 2, 
+      color = "#000000", 
+      fill = FALSE) %>% # Do not fill the inside of the state; only draw the border
+   setView(lng = -80, lat = 35, zoom = 7)
+
+leaflet_nc
+```
+
+
 ### Plotly Interactive Graphics
 
 `ggplotly` is a library built and maintained by Plotly that allows you to convert any ggplot visualization into a plotly visualization using the `ggplotly()` function.  It's actually quite straightforward for basic visualizations.
 
-Below we create a standard static ggplot object that creates a contour plot.
+Below we create our lollipop chart from the bivariate lesson.
 
 ```{r}
 i1 <- gapminder %>%
@@ -367,7 +381,7 @@ We can clean up the labeling - the easiest way to do this is to add the labeling
 i1 <- gapminder %>%
   filter(continent == "Asia" & 
            year == 2007) %>% 
-   mutate(label_text = str_c(country, ": ", lifeExp)) %>% 
+   mutate(label_text = str_c(country, ": ", round(lifeExp, 1))) %>% 
   ggplot(aes(lifeExp, reorder(country, lifeExp), text = label_text)) +
   geom_segment(aes(x = 40, 
                xend = lifeExp, 
@@ -386,11 +400,12 @@ i1 <- gapminder %>%
 ggplotly(i1, tooltip = "label_text")
 ```
 
-Here's another example with a scatterplot.  Notice the mutate statement that gets us a nice label, and that it is mapped to the `text` aesthetic.
+Here's another example with a scatterplot.  Notice the mutate statement that gets us a nice label, and that it is mapped to the `text` aesthetic.  The `\n` tells it to go to a new line.
 
 ```{r}
+library(scales)
 i2 <- gapminder %>% 
-   mutate(label_text = str_c(country, " ", year, ": \nGDP per cap ", gdpPercap, "\nLife Exp ", lifeExp)) %>% 
+   mutate(label_text = str_c(country, " ", year, ": \nGDP per cap = ", dollar(round(gdpPercap, 0)), "\nLife Exp = ", round(lifeExp, 1))) %>% 
    ggplot(aes(gdpPercap, lifeExp, text = label_text)) +
    geom_point() +
    scale_x_log10()
@@ -407,7 +422,6 @@ ggplotly(i2, tooltip = "label_text")
 And one more, this time with a time series.  One funky thing here is that I needed to add a `group = 1` aesthetic once I added the text aesthetic.  I needed to tell ggplot that there was only one group of data - when it saw the text aesthetic it thought there were many.  
 
 ```{r}
-library(scales)
 i3 <- economics %>% 
    mutate(label_text = str_c(date, ": ", psavert, "%")) %>% 
    ggplot(aes(x = date, y = psavert, text = label_text, group = 1)) +
@@ -443,10 +457,3 @@ prices %>%
 ```
 
 For more on Plotly you can use this [cheat sheet](https://images.plot.ly/plotly-documentation/images/r_cheat_sheet.pdf?_ga=2.214086935.1631915434.1573265049-1656343979.1569706942), or you can visit the [Plotly R Open Source Graphing Library](https://plotly.com/r/).
-
-
-#### Acknowledgements
-
--   Thanks to Gina Reynolds for the racing bar charts [demo](https://evamaerey.github.io/little_flipbooks_library/racing_bars/racing_barcharts.html#35).
--   Here's another racing bar chart demo I adapted from [amrrs](https://github.com/amrrs/animated_bar_charts_in_R) and the associated article at [R Bloggers](https://www.r-bloggers.com/2020/01/how-to-create-bar-race-animation-charts-in-r/).
--   The leaflet section was adapted from [here](https://mdsr-book.github.io/mdsr2e/ch-spatial.html).
