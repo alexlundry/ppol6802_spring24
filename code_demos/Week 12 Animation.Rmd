@@ -239,37 +239,53 @@ Here are some especially popular provider tiles that Leaflet provides:
 
 And this is a great [website](http://leaflet-extras.github.io/leaflet-providers/preview/index.html) where you can preview all the available ones.
 
+
 ### Choropleth Maps
 
-You can create choropleth maps in Leaflet.  Here we'll be showing 2016 House election results in NC using the `fec16` package that has detailed election results.  We call their `results_house` dataset, do some clean up and then join it into their `candidates` dataset.  From there we filter to North Carolina, group by the district and create some summary variables for each CD.  
+You can create choropleth maps in Leaflet.  Here we'll be showing 2016 House election results in NC using the `fec16` package that has detailed election results by congressional district.  We call their `results_house` dataset, do some clean up and then join it into their `candidates` dataset.  From there we filter to North Carolina, group by the district and create some summary variables for each CD.  
 
 ```{r message=FALSE, warning=FALSE}
-library(socviz)
+# install.packages("fec16")
+library(fec16)
 
-nc_results <- county_data %>% # built in soviz data
-   select(state, id, name, per_gop_2016) %>% 
-   filter(state == "NC",
-          name != "34")
+nc_results <- results_house %>% # built in fec16 data
+   mutate(district = parse_number(district_id)) %>% 
+   left_join(candidates, by = "cand_id") %>% # candidates is also built in fec16 data
+   select(state, district, cand_name, party, general_votes) %>% 
+   arrange(desc(general_votes)) %>% 
+   filter(state == "NC") %>% 
+   group_by(state, district) %>% 
+   summarize(N = n(), 
+             total_votes = sum(general_votes, na.rm = T),
+             d_votes = sum(ifelse(party == "DEM", general_votes, 0), na.rm = T),
+             r_votes = sum(ifelse(party == "REP", general_votes, 0), na.rm = T),
+             other_votes = total_votes - d_votes - r_votes, 
+             r_prop = r_votes / total_votes, 
+             winner = ifelse(r_votes > d_votes, "Republican", "Democrat"))
 
 nc_results
 ```
 
-Now we need a NC counties shapefile.  Remember that we can go to the `tigris` package here for this. We also need to load up the `sf` library so we can work with sf data.
+Now we need a congressional district shapefile for the 114th Congress. Did you know that the `tigris` package also can give you those?  You get those from the `congressional_districts()` function, and we tell it the state, the year that we need CD files for (it defaults to 2021, so we need to explicitly tell it this is for a 2016 election so it gets the right districts), and we give it `cb = TRUE` to get the most detailed map data. We also need to load up the `sf` library so we can work with sf data.
 
 ```{r message=FALSE, warning=FALSE}
 library(sf)
 library(tigris)
-nc_map <- counties(state = c("NC"))
+options(tigris_use_cache = TRUE, tigris_progress = FALSE)
 
-nc_map
+nc_map <- congressional_districts(cb = TRUE, state = "NC", year = 2016, progress = FALSE)
+
+ggplot(nc_map) +
+   geom_sf() +
+   theme_void()
 ```
 
-We need to merge in the election data with the shape file. The `nc_results` data has an `id` field that 5 characters long, everyone starting with 37.  The `nc_map` file has a `STATEFP` 2 character variable that is always 37, and `COUNTYFP` that is three characters long.  These are the FIPS codes that are the standardized ids for US states and counties.  So in order to merge the nc_shp polygons with the nc_results election data frame we will need to concatenate `STATEFP` and `COUNTYFP` into a new variable named `id`, then join the two datasets together.
+We need to merge in the election data with the shape file. Here we merge the nc_shp polygons with the nc_results election data frame using the district as the key.
 
 ```{r message=FALSE, warning=FALSE}
 nc_merged <- nc_map %>% 
-   mutate(id = str_c(STATEFP, COUNTYFP)) %>% # creating a new ID that puts the state and county one together 
-   left_join(nc_results, by = "id")
+   mutate(district = str_remove(CD115FP, "^0+") %>% as.numeric) %>% # removing the leading zero in the CD designator 
+   left_join(nc_results, by = "district")
 
 glimpse(nc_merged)
 ```
@@ -298,7 +314,7 @@ To make the plot in Leaflet, we have to add the tiles, and then the polygons def
 - The weight controls the stroke width in pixels.  
 - The color indicates what the border color should be.
 - fillColor is how the polygons should be colored; here is where we call the function we created above.
-- The fillOpacity does what you think it would, functioning essentially as an alpha argument.  Since we chose a Red to Blue color pallete that mapped from 0 to 1, we actually need to flip the variable in order to associate higher values with Red.  Thus we map '1-per_gop_2016' to color; notice how we put a tilde in front of it to indicate that it is a function call.  
+- The fillOpacity does what you think it would, functioning essentially as an alpha argument.  Since we chose a Red to Blue color pallete that mapped from 0 to 1, we actually need to flip the variable in order to associate higher values with Red.  Thus we map '1-r_prop' to color; notice how we put a tilde in front of it to indicate that it is a function call.  
 - The popup argument is also a function since it will vary based on the object.  That function creates text that shows the district number and the proportion of Republican votes.  Notice that to do a line break here, we have to use HTML code `</br>` because this is an interactive viz rendered in HTML.
 
 ```{r message=FALSE, warning=FALSE}
@@ -307,9 +323,9 @@ leaflet_nc <- leaflet(nc_merged) %>%
    addPolygons(
       weight = 1,
       color = "grey",
-      fillColor = ~pal(1-per_gop_2016),
-      fillOpacity = 0.9,
-      popup = ~str_c("<b>", name, "</b></br>", "GOP = ", round(per_gop_2016 * 100, 0), "%")) %>% 
+      fillColor = ~pal(1-r_prop),
+      fillOpacity = 0.7,
+      popup = ~str_c("<b>District ", district, "</b></br>", "GOP = ", round(r_prop * 100, 0), "%")) %>% 
    setView(lng = -80, lat = 35, zoom = 7)
 
 leaflet_nc
@@ -318,7 +334,7 @@ leaflet_nc
 We might want to add a state border here.  To do so, we'll need to get a state sf object using `tigris`, and then we simply add another `addPolygons` function call, this time pointing it specifically at the state sf object.  We can set some options like the weight and color of the border, but the most important thing to do here is to tell it NOT to fill the object because that would obstruct our county fills.
 
 ```{r}
-nc_state_map <- states() %>% 
+nc_state_map <- states(progress = FALSE) %>% 
    filter(NAME == "North Carolina")
 
 leaflet_nc <- leaflet(nc_merged) %>% 
@@ -326,9 +342,9 @@ leaflet_nc <- leaflet(nc_merged) %>%
    addPolygons(
       weight = 1,
       color = "grey",
-      fillColor = ~pal(1-per_gop_2016),
-      fillOpacity = 0.9,
-      popup = ~str_c("<b>", name, "</b></br>", "GOP = ", round(per_gop_2016 * 100, 0), "%")) %>% 
+      fillColor = ~pal(1-r_prop),
+      fillOpacity = 0.7,
+      popup = ~str_c("<b>District ", district, "</b></br>", "GOP = ", round(r_prop * 100, 0), "%")) %>% 
    addPolygons(
       data = nc_state_map,
       weight = 2, 
