@@ -3,7 +3,6 @@ title: "PPOL 6802 Week 12 - Animation & Interaction"
 author: "Alex Lundry"
 date: "`r Sys.Date()`"
 output: html_document
-# always_allow_html: true (only need this when outputing a github_document)
 ---
 
 Animation of plots in R can be fairly straightforward.  It can also be stunningly complex.  We'll focus on the straightforward ones - you'll have to wrap your head around some of the lingo, but once you get the drift it's not that difficult.  
@@ -113,26 +112,62 @@ anim_save("gapminder3.gif")
 
 ### Reveal data along a given dimension
 
-We can also use **gganimate** to reveal data along a specific dimension.  This is most useful for time series data in which you can show the change over time.  Below we've created a standard line plot of lifeExp by country, filtered to just show countries in Asia.
+We can also use **gganimate** to reveal data along a specific dimension.  This is most useful for time series data in which you can show the change over time.  Remember the NVDIA versus Intel line graph from last week?  Let's recreate that. In the R code below, we are using the `tidyquant` library, which we have used before, to get the stock prices for NVDIA and INTC.  We are doing some custom theming to try to come close to the look of the original.  And then we are doing a basic ggplot line graph.  
 
 ```{r message=FALSE, warning=FALSE}
-p5 <- ggplot(gapminder %>% filter(continent == "Asia"), aes(year, lifeExp, color = country)) +
-   geom_line(show.legend = FALSE) +
-   labs(title = "Life Expectancy Over Time - Asian Continent")
+library(tidyquant)
+library(scales)
+stocks <- tq_get(c("NVDA", "INTC"), get = "stock.prices")
+
+black_theme <- theme_minimal(base_family = "Helvetica") +
+  theme(plot.background = element_rect(fill = "black", color = NA), 
+        panel.background = element_rect(fill = "black", color = NA),
+        legend.background = element_rect(fill = "black", color = NA), 
+        text = element_text(color = "white"), 
+        axis.text = element_text(color = "white"), 
+        axis.title = element_text(color = "white"), 
+        legend.text = element_text(color = "white"), 
+        legend.title = element_text(color = "white"),
+        plot.title = element_text(color = "white", size = 30, face = "bold"), 
+        plot.subtitle = element_text(color = "white", size = 12),
+        plot.caption = element_text(color = "white", size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+p5 <- ggplot(stocks, aes(date, close, color = symbol)) +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = label_dollar()) +
+  scale_x_date() +
+  scale_color_manual(values = c("NVDA" = "white", "INTC" = "red")) +
+  labs(title = "NVIDIA versus Intel", color = "Ticker Symbol",
+       x = "Date", y = "Daily Close Price $") +
+  black_theme
 
 p5
 ```
 
-We can then call `transition_reveal` to let the data gradually appear, by year. The `geom_point` call means that as it appears it shows a point.
+We can then call `transition_reveal` to let the data gradually appear, day by day. The `geom_point` call means that as it appears it shows a point.  We add a custom subtitle here that displays the date, by using the variable `{frame_along}`, and then we make the display axes dynamic, moving and changing as the data changes by adding the function `view_follow()`. For that last function we could have fixed the X or Y axis as a parameter, but to mimic the original we don't fix either one.  
+
+The last thing we do is animate it.  But notice the additional parameters.  Remember how the original one took interminably long?  We want to change that.  Fortunately the animation function let's us set a few key parameters:
+
+- the frames per second, which we talked about last week, gets at how smooth the animation is.  We do 15 fps here as that is the bare minimum for smoothing.
+- we can also specify how long we want the animation to last.  We set it for 30 seconds.
+- finally, we can dictate how long it rests at the end of the animation before it loops again.  This is NOT the number of seconds to pause, but rather the number of times to repeat the last frame.  We set it here to repeat 100 times.  
+
+There are many other useful parameters to this function, like a start pause or a rewind.
 
 ```{r message=FALSE, warning=FALSE}
-p6 <- p5 + 
-   geom_point(show.legend = FALSE) +
-   transition_reveal(year)
+# install.packages("transformr")
+p6 <- p5 +
+   transition_reveal(date) +
+   geom_point(size = 3, show.legend = FALSE) +
+   labs(subtitle = "{frame_along}") +
+   view_follow()
 
-animate(p6)
+# Animate with specified fps for speed control
+animate(p6, fps = 15, duration = 30, end_pause = 100)
 
-anim_save("gapminder4.gif")
+anim_save("nvidia.gif")
 ```
 
 ### Morphing Bar Charts
