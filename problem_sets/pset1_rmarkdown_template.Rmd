@@ -1,5 +1,5 @@
 ---
-title: "Problem Set 1 - PPOL 6802 Spring 2024"
+title: "Problem Set 1 - PPOL 6802"
 author: "INSERT NAME"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -8,26 +8,6 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## Brief Explanation of R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. What's most helpful about it is the ease with which you can integrate formatted text, code and charts. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. You can also find an extremely helpful "cheatsheet" [here](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf).
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-### Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. For your problem sets you MUST show your code, so be sure that each code chunk for the problem set is set to `echo = TRUE`.
 
 ## Problem Set #1
 
